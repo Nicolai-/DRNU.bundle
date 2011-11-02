@@ -9,7 +9,20 @@
     "id":"quality",
     "type":"enum",
     "label":"Quality",
-    "default": "high",
+    "default": "auto",
     "values": [ "high", "medium", "low", "auto" ]
-  }
+  },
+  {
+  	"id":"beta_enable",
+  	"type":"bool",
+  	"label":"Enable beta features",
+  	"default": "false"
+  },
+  {
+  	"id":"language",
+  	"type":"enum",
+  	"label":"Set language",
+  	"default":"da",
+  	"values":["da","en"]
+	}
 ]
