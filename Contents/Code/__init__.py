@@ -189,13 +189,9 @@ def CreateVideoItem(items, title):
  
 			
 		### Skal der kigges på
-		if ('isPremiere' in item and item['isPremiere'] is not None) | ('premiere' in item and item['premiere']):
-			title += ' *premiere'
-		if title.upper() in titles: 
-			if 'formattedBroadcastTime' in item:
-				title += ' ' + str(item['formattedBroadcastTime'])
-			else:
-				title += ' ' + subtitle
+		if ('isPremiere' in item) | ('preimere' in item):
+			title += ' *Premiere'				
+#			
  
 		titles.add(title.upper())
 			
