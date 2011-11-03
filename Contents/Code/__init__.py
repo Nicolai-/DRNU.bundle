@@ -101,7 +101,7 @@ def LiveTV():
 def ProgramSerierMenu(id,title, offset):
 	dir = ObjectContainer(view_group = "List", title1 = NAME, title2 = title )
 
-	JSONObject=JSON.ObjectFromURL(APIURL % "programseries.json", cacheTime=3600)
+	JSONObject=JSON.ObjectFromURL(APIURL % "programseries.json", cacheTime=3600, timeout = 120)
 	
 	bucket = dict()
 	letter = ''
@@ -135,8 +135,6 @@ def ProgramSerierMenu(id,title, offset):
 		
 		else:
 			for serie in serier:
-				Log.Debug(serie['title'])
-				Log.Debug('----')
 				dir.add(DirectoryObject(title = serie['title'], 
 									tagline = serie['subtitle'], 
 									summary = serie['summary'], 
