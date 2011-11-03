@@ -11,7 +11,7 @@ RADIO_NOWNEXT_URL = "http://www.dr.dk/tjenester/LiveNetRadio/datafeed/programInf
 RADIO_TRACKS_URL = "http://www.dr.dk/tjenester/LiveNetRadio/datafeed/trackInfo.drxml?channelId=%s"
 NAME  = "DR NU"
 ART   = 'art-default.jpg'
-ICON  = 'DR_icon-default.png'
+ICON  = 'icon-default.png'
 bwInt = {"high":1000, "medium":500, "low":250, "auto":20000}
 jsDrLive = "http://www.dr.dk/nu/embed/live?height=467&width=830"
 jsDrRadioLive = "http://www.dr.dk/radio/channels/channels.json.drxml/"
