@@ -24,5 +24,12 @@
   	"label":"Set language",
   	"default":"da",
   	"values":["da","en"]
-	}
+  },
+  {
+  	"id":"ignore_geo",
+  	"type":"bool",
+  	"label":"Ignore Geo-blocking",
+  	"default":"false"
+  }
+	
 ]
