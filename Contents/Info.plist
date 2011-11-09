@@ -16,14 +16,10 @@
 	<string>hook</string>
 	<key>CFBundleVersion</key>
 	<string>1.0</string>
-	<key>PlexClientPlatforms</key>
-	<string>MacOSX,iOS</string>
 	<key>PlexFrameworkVersion</key>
 	<string>2</string>
 	<key>PlexPluginMode</key>
 	<string>AlwaysOn</string>
-	<key>PlexPluginDevMode</key>
-	<string>1</string>
 	<key>PlexSearchServices</key>
 	<dict>
 		<key>drnu</key>
