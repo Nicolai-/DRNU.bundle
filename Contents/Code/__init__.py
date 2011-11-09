@@ -81,7 +81,7 @@ def LiveRadioMenu():
 	groupList = []
 	[dir.add(getLiveRadioChannel(channel)) for channel in liveChannels if channel['group'] is None]
 	groupList.append([channel for channel in liveChannels if (channel['group'] is not None) & (channel['group'] not in groupList) ])
-	[dir.add(DirectoryObject( thumb=R('P4_RADIO_icon-default.png'), title = channel[0]['group'], key = Callback(LiveRadioP4Menu, channel = channel))) for channel in groupList]
+	[dir.add(DirectoryObject( thumb=R('P4.png'), title = channel[0]['group'], key = Callback(LiveRadioP4Menu, channel = channel))) for channel in groupList]
 	return dir
 
 def getLiveRadioChannel(source):
@@ -101,7 +101,7 @@ def LiveTV():
 	channelList = []
 	channelList.append(liveTVChannels)
 	for channels in [val for val in channelList[0] if val['channelName'] not in BETA_EXCLUDE] if Prefs['beta_enable'] is False else channelList[0]:
-			channelIcon = channels['channelName'].upper().replace(' ','_')+"_icon-default.png"
+			channelIcon = channels['channelName'].upper().replace(' ','')+".png"
 			dir.add(VideoClipObject(title = channels['channelName'], 
 								url = "http://www.dr.dk/nu/live#/%s" % channels['channelName'],
 								thumb = R(channelIcon),
