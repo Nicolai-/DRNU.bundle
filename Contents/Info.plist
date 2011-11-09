@@ -16,14 +16,34 @@
 	<string>hook</string>
 	<key>CFBundleVersion</key>
 	<string>1.0</string>
+	<key>PlexClientPlatforms</key>
+	<string>MacOSX,iOS</string>
 	<key>PlexFrameworkVersion</key>
 	<string>2</string>
 	<key>PlexPluginMode</key>
 	<string>AlwaysOn</string>
+	<key>PlexPluginDevMode</key>
+	<string>1</string>
 	<key>PlexSearchServices</key>
 	<dict>
-		<key>DRNU</key>
+		<key>drnu</key>
 		<string>com.plexapp.search.drnu</string>
+	</dict>
+	<key>PlexURLServices</key>
+	<key>DRNU</key>
+	<dict>
+		<key>URLPattern</key>
+		<string>http://.*dr.dk/nu/live\#/.+|http://.*dr.dk/nu/player/\#/.+|http://.*dr.dk/.*\.htm#/.+|http://.*dr.dk/radio/player/?.+</string>
+		<key>LinkedPlugin</key>
+		<string>com.plexapp.plugins.drnu</string>
+		<key>TestURLs</key>
+		<array>
+			<string>http://www.dr.dk/nu/live#/DR1</string>
+			<string>http://www.dr.dk/nu/player/#/10-ting-du-ikke-vidste-om-at-tabe-sig/20134</string>
+			<string>http://www.dr.dk/nu/player/#/10-ting-du-ikke-vidste-om-at-tabe-sig/20134/00:02</string>
+			<string>http://www.dr.dk/Sporten/Fodboldmagasinet/Fodboldmagasinet.htm#/21713</string>
+			<string>http://www.dr.dk/radio/player/?P3</string>
+		</array>
 	</dict>
 </dict>
 </plist>

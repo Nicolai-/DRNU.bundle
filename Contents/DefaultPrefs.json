@@ -4,5 +4,32 @@
     "type":"bool",
     "label":"Group Programs per first letter",
     "default": "false"
+  },
+  {
+    "id":"quality",
+    "type":"enum",
+    "label":"Quality",
+    "default": "auto",
+    "values": [ "high", "medium", "low", "auto" ]
+  },
+  {
+  	"id":"beta_enable",
+  	"type":"bool",
+  	"label":"Enable beta features",
+  	"default": "false"
+  },
+  {
+  	"id":"language",
+  	"type":"enum",
+  	"label":"Set language",
+  	"default":"da",
+  	"values":["da","en"]
+  },
+  {
+  	"id":"ignore_geo",
+  	"type":"bool",
+  	"label":"Ignore Geo-blocking",
+  	"default":"false"
   }
+	
 ]
