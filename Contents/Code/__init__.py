@@ -41,7 +41,7 @@ def ValidatePrefs():
 def Start():
 	Plugin.AddPrefixHandler(VIDEO_PREFIX, VideoMainMenu, NAME, ICON, ART)
 	# Quickfix to get video to work. problems with radio !!!
-	#Plugin.AddPrefixHandler(MUSIC_PREFIX, MusicMainMenu, NAME, ICON, ART)
+	Plugin.AddPrefixHandler(MUSIC_PREFIX, MusicMainMenu, NAME, ICON, ART)
 	Plugin.AddViewGroup("InfoList", viewMode="InfoList", mediaType="items")
 	Plugin.AddViewGroup("List", viewMode="List", mediaType="items")
 	MediaContainer.art = R(ART)
@@ -60,8 +60,8 @@ def VideoMainMenu():
 	dir.add(DirectoryObject(title = L("TV Shows"), summary = L("All Series"), art = R(ART), thumb = R(ICON), key = Callback(ProgramSerierMenu,id = None, title = L("TV Shows"), offset = 0)))
 	for tvOD in drODServices["TV"]:
 		dir.add(DirectoryObject(title = L(tvOD['title']), summary = L(tvOD['summary']), thumb = R(ICON), art = R(ART), key = Callback(CreateVideoItem, title = L(tvOD['title']), items = JSON.ObjectFromURL(APIURL % tvOD['json']))))
-	# Quickfix to get video to work. problems with radio !!!
-#	dir.add(DirectoryObject(title = L("Radio"), summary = L("Listen to Radio"), art = R(ART), thumb = R(ICON), key = Callback(MusicMainMenu)))
+#	 Quickfix to get video to work. problems with radio !!!
+	dir.add(DirectoryObject(title = L("Radio"), summary = L("Listen to Radio"), art = R(ART), thumb = R(ICON), key = Callback(MusicMainMenu)))
 	dir.add(PrefsObject(title = L("Preferences"), summary=L("Set-up the DR NU plug-in"), thumb = R(ICON), art = R(ART)))
 	return dir
 
@@ -183,8 +183,8 @@ def CreateVideoItem(items, title):
 		vco = EpisodeObject()
 		if 'title' in item:
 			title += item['title']
-		if 'spotSubTitle' in item and item['spotSubtitle'] !="":
-			spotSubtitle = item['spotSubtitle'] + ' '
+		if 'spotSubTitle' in item and item['spotSubTitle'] !="":
+			spotSubtitle = item['spotSubTitle'] + ' '
 		else:
 			spotSubtitle = ""
 		
