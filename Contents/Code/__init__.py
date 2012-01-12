@@ -386,8 +386,8 @@ def getTVLiveMetadata(channelID):
 	# this is a undocumented feature that might break the plugin
 
 	channels = JSON.ObjectFromURL(TV_NOWNEXT_URL, cacheTime=60)
-	title_now = "Ingen titel tilg√¶ngenlig"
-	title_next = "Ingen titel tilg√¶ngenlig"
+	title_now = "Ingen titel tilgængenlig"
+	title_next = "Ingen titel tilgængenlig"
 	description_now = ""
 	description_next = ""
 				
