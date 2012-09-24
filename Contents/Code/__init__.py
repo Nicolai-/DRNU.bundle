@@ -230,23 +230,21 @@ def ProgramSerierMenu(id,title):
 									summary = serie['summary'], 
 									art = R(ART), 
 									thumb = thumb, 
-									key = Callback(CreateVideoItem, 
-												items = JSON.ObjectFromURL(APIURL % "programseries/"+serie['id'] + "/videos"),
-												title = serie['title'])))
+									key = Callback(CreateVideoItem, serieid = serie['id'], title = serie['title'])))
 			
 	return dir
 
 def LetterMenu(title, serier):
 	dir = ObjectContainer(view_group="List", title1 = "DR NU", title2 = title)
 	for serie in serier:
-		JSONobj = JSON.ObjectFromURL(APIURL % "Programseries/" + serie['id'] + "/videos")
-		dir.add(DirectoryObject(title = serie['title'], summary = serie['summary'], art = R(ART), thumb = APIURL % "programseries/"+serie['id']+"/images/512x512.jpg", key = Callback(CreateVideoItem, items = JSONobj, title = serie['title'])))
+		dir.add(DirectoryObject(title = serie['title'], summary = serie['summary'], art = R(ART), thumb = APIURL % "programseries/"+serie['id']+"/images/512x512.jpg", key = Callback(CreateVideoItem, serieid = serie['id'], title = serie['title'])))
 	return dir
-
-		
-def CreateVideoItem(items, title):
+	
+def CreateVideoItem(serieid, title):
 	dir = ObjectContainer(view_group = "List", title1 = "DR NU", title2 = title)
-
+	
+	items = JSON.ObjectFromURL(APIURL % "programseries/"+serieid + "/videos")
+	Log.Info('PATH: ' + APIURL % "programseries/"+serieid + "/videos")
 	titles = set()
 	for item in items:
 		key=APIURL % "videos/" + str(item["id"])
