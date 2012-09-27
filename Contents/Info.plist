@@ -3,7 +3,7 @@
 <plist version="1.0">
 <dict>
 	<key>CFBundleDevelopmentRegion</key>
-	<string>English</string>
+	<string>Danish</string>
 	<key>CFBundleExecutable</key>
 	<string></string>
 	<key>CFBundleIdentifier</key>
@@ -22,10 +22,5 @@
 	<string>2</string>
 	<key>PlexPluginMode</key>
 	<string>AlwaysOn</string>
-	<key>PlexSearchServices</key>
-	<dict>
-		<key>DRNU</key>
-		<string>com.plexapp.search.drnu</string>
-	</dict>
 </dict>
 </plist>

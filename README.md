@@ -8,16 +8,26 @@ viewable outside of Denmark.
 
 Installation
 ============
+Automatic (Recommended):
+Look in Plex' Channel Directory for DR NU
 
-With Git (Recommended):
-cd ~/Library/Application Support/Plex Media Server/Plug-ins/
-git clone git://github.com/maxandersen/DRNU.bundle.git
-
-With Zip (Only if Git scares you): 
-Download https://github.com/maxandersen/DRNU.bundle/zipball/master
-Unzip content into ~/Library/Application Support/Plex Media Server/Plug-ins/
-
+Manually (Mac):
+Download master branch of DR NU as zip.
+Download master branch of Services.bundle as zip from dkplex (https://github.com/dkplex/Services.bundle)
+Unzip both
+Rename DR NU to DRNU.bundle
+Rename Services to Services.bundle
+Move both files to a place on your harddrive.
+Close Plex Media Server
+Open Terminal (cmd+space "terminal")
+Delete Plex's DR NU channel (rm ~/Library/Application Support/Plex Media Server/Plug-ins/DRNU.bundle)
+Delete Plex's Services (rm ~/Library/Application Support/Plex Media Server/Plug-ins/Services.bundle)
+Make a symbolic link from The unzipped files i Terminal (Syntax ln -s <source> <destination>)
+Start Plex Media Server
 Now Plex should see the DRNU plugin.
+
+Manually (Other platforms):
+TBA
 
 Changes
 =======
