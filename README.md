@@ -22,7 +22,7 @@ Close Plex Media Server
 Open Terminal (cmd+space "terminal")
 Delete Plex's DR NU channel (rm ~/Library/Application Support/Plex Media Server/Plug-ins/DRNU.bundle)
 Delete Plex's Services (rm ~/Library/Application Support/Plex Media Server/Plug-ins/Services.bundle)
-Make a symbolic link from The unzipped files i Terminal (Syntax ln -s <source> <destination>)
+Make a symbolic link from The unzipped files i Terminal (Syntax ln -s [source] [destination])
 Start Plex Media Server
 Now Plex should see the DRNU plugin.
 
