@@ -2,11 +2,23 @@
 <!DOCTYPE plist PUBLIC "-//Apple Computer//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
 <plist version="1.0">
 <dict>
+<<<<<<< HEAD
+=======
+	<key>CFBundleDevelopmentRegion</key>
+	<string>Danish</string>
+	<key>CFBundleExecutable</key>
+	<string></string>
+>>>>>>> a213799... Back to basic with new API
 	<key>CFBundleIdentifier</key>
 	<string>com.plexapp.plugins.drnu</string>
 	<key>PlexClientPlatforms</key>
 	<string>*</string>
 	<key>PlexFrameworkVersion</key>
 	<string>2</string>
+<<<<<<< HEAD
+=======
+	<key>PlexPluginMode</key>
+	<string>AlwaysOn</string>
+>>>>>>> a213799... Back to basic with new API
 </dict>
 </plist>
