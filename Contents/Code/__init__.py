@@ -1,36 +1,29 @@
 import time
-####################################################################################################
+import datetime
+import re
+#Ex.MediaNotAvailable
+#Ex.MediaNotAuthorized
+#Ex.MediaGeoblocked
+#####################################################################################################
 
 VIDEO_PREFIX = "/video/drnu"
 MUSIC_PREFIX = "/music/drnu"
 BETA_EXCLUDE = ['']
 
-APIURL = "http://www.dr.dk/nu/api/%s"
-TV_NOWNEXT_URL = "http://www.dr.dk/nu/api/nownext"
 RADIO_NOWNEXT_URL = "http://www.dr.dk/tjenester/LiveNetRadio/datafeed/programInfo.drxml?channelId=%s"
 RADIO_TRACKS_URL = "http://www.dr.dk/tjenester/LiveNetRadio/datafeed/trackInfo.drxml?channelId=%s"
 NAME  = "DR NU"
 ART   = 'art-default.jpg'
-ICON  = 'DR_icon-default.png'
-bwInt = {"high":1000, "medium":500, "low":250, "auto":20000}
-jsDrLive = "http://www.dr.dk/nu/embed/live?height=467&width=830"
+ICON  = 'icon-default.png'
 jsDrRadioLive = "http://www.dr.dk/radio/channels/channels.json.drxml/"
-drODServices = {"TV":[{"title":"Latest",
-			"summary":"Watch the latest videos",
-			"json":"videos/newest.json"},
-			{"title":"Spot",
-			"summary":"Spot light",
-			"json":"videos/spot.json"},
-			{"title":"Most watched",
-			"summary":"Watch the most popular videos",
-			"json":"videos/mostviewed.json"},
-			{"title":"Last Chance",
-			"summary":"Videos about to expire",
-			"json":"videos/lastchance.json"}]}
 
 HTTP.CacheTime = 3600
-CONFIGURATION = JSON.ObjectFromURL('http://www.dr.dk/mu/Configuration')
-CONFIGURATION_SERIESRULES = JSON.ObjectFromURL('http://www.dr.dk/mu/configuration/SeriesRules')
+
+CONFIGURATION = dict()
+CONFIGURATION_SERIESRULES = dict()
+
+PROGRAMCARD_URL = 'http://www.dr.dk/mu/programcard'
+BUNDLESWITHPUBLICASSET_URL = 'http://www.dr.dk/mu/View/bundles-with-public-asset'
 
 ####################################################################################################
 
@@ -38,27 +31,53 @@ def ValidatePrefs():
 	Locale.DefaultLocale = Prefs['language']
 	
 def Start():
+
 	Plugin.AddPrefixHandler(VIDEO_PREFIX, VideoMainMenu, NAME, ICON, ART)
-	Plugin.AddPrefixHandler(MUSIC_PREFIX, MusicMainMenu, NAME, ICON, ART)
+#	Plugin.AddPrefixHandler(MUSIC_PREFIX, MusicMainMenu, NAME, ICON, ART)
 	Plugin.AddViewGroup("InfoList", viewMode="InfoList", mediaType="items")
 	Plugin.AddViewGroup("List", viewMode="List", mediaType="items")
-#	MediaContainer.art = R(ART)
-#	MediaContainer.title1 = NAME
-#	DirectoryItem.thumb = R(ICON)
-#	HTTP.Headers['User-Agent'] = "Mozilla/5.0 (Macintosh; U; Intel Mac OS X 10.7; en-US; rv:1.9.2.13) Gecko/20101203 Firefox/3.6.13"
-##	Locale.DefaultLocale = Prefs['language']
-
+	MediaContainer.art = R(ART)
+	MediaContainer.title1 = NAME
+	DirectoryItem.thumb = R(ICON)
+	HTTP.Headers['User-Agent'] = "Mozilla/5.0 (Macintosh; U; Intel Mac OS X 10.7; en-US; rv:1.9.2.13) Gecko/20101203 Firefox/3.6.13"
+#	Locale.DefaultLocale = Prefs['language']
 def VideoMainMenu():
 	dir = ObjectContainer(view_group = "List", title1 = NAME, title2 = "TV", art = R(ART))
-	dir.add(DirectoryObject(title = L("Live TV"), summary = L('Watch Live TV'), art = R(ART),  thumb = R(ICON), key = Callback(LiveTV)))
-	dir.add(DirectoryObject(title = L("TV Shows"), summary = L("All Series"), art = R(ART), thumb = R(ICON), key = Callback(ProgramSerierMenu,id = None, title = L("TV Shows"), offset = 0)))	
-	#	for tvOD in drODServices["TV"]:
-	#		dir.add(DirectoryObject(title = L(tvOD['title']), summary = L(tvOD['summary']), thumb = R(ICON), art = R(ART), key = Callback(CreateVideoItem, title = tvOD['title'], items = JSON.ObjectFromURL(APIURL % tvOD['json']))))
-	dir.add(DirectoryObject(title = L("Radio"), summary = L("Listen to Radio"), art = R(ART), thumb = R(ICON), key = Callback(MusicMainMenu)))
-#	dir.add(PrefsObject(title = L("Preferences"), summary=L("Set-up the DR NU plug-in"), thumb = R(ICON), art = R(ART)))
-	#Log.Debug(L('Preferences'))
-	return dir
+	global CONFIGURATION
+	global CONFIGURATION_SERIESRULES
+	try:
+#		CONFIGURATION = JSON.ObjectFromURL('http://www.dr.dk/mu/Configuration')
+		CONFIGURATION_SERIESRULES = JSON.ObjectFromURL('http://www.dr.dk/mu/configuration/SeriesRules')
+	except :
+		dir.header = "UPS!!!"
+		dir.message = "Ingen forbindelse til DR"
+	else:
+		dir.add(DirectoryObject(title = 'Live TV', 
+							summary = 'Se live TV', 
+							art = R(ART),  
+							thumb = R(ICON), 
+							key = Callback(Bundle, 
+										title2="Live", 
+										live = True, 
+										BundleType="'Channel'", 
+										ChannelType="'TV'", 
+										DrChannel = 'true', 
+										limit='$eq(0)', 
+										SourceUrl="$orderby('asc')")))
 
+		dir.add(DirectoryObject(title = 'Programmer', 
+							summary = 'Se programmer fra DR\'s arkiv', 
+							art = R(ART), 
+							thumb = R(ICON), 
+							key = Callback(bundles_with_public_asset, 
+								title = 'Programmer', 
+								groupby = 'firstChar', 
+								DrChannel= "true", 
+								ChannelType = "'TV'", 
+								limit="$eq(0)", 
+								Title = "$orderby('asc')")) )
+	
+	return dir
 
 def MusicMainMenu():
 	dir = ObjectContainer(view_group="List", title1 = NAME, title2 = "Radio", art = R(ART))
@@ -66,7 +85,7 @@ def MusicMainMenu():
 	dir.add(DirectoryObject(title = "TV", summary = "Lyt til radio", art = R(ART), thumb = R(ICON), key = Callback(VideoMainMenu)))
 #	dir.add(PrefsObject(title = "Indstillinger...", summary="Indstil DR NU plug-in", thumb = R(ICON), art = R(ART)))
 	return dir
-
+@route('/music/drnu/live')
 def LiveRadioMenu():
 	dir = ObjectContainer(view_group = "List", title1 = NAME, title2 = L("Live Radio"), art = R(ART))
 	for myLoop in CONFIGURATION['Data']:
@@ -78,102 +97,33 @@ def LiveRadioMenu():
 				else:
 					dir.add(DirectoryObject(title = 'P4', key = Callback(LiveRadioP4Menu)))
 	return dir
-
+@route('/music/drnu/live/p4')
 def LiveRadioP4Menu():
 	dir = ObjectContainer(view_group="List",title1 = NAME, title2 = "P4", art = R(ART))
 	for p4Loop in CONFIGURATION['Data']:
 						if p4Loop.get('Id') == 'RADIOLocalNews':
 							for ChannelsAndNews in p4Loop['ChannelsAndNews']:
 								if '4' in ChannelsAndNews['PrimaryChannel']:
-#								if '4' in ChannelAndNews['PrimaryChannel']:
 									dir.add(VideoClipObject(title = ChannelsAndNews['Title'], url = 'http://www.dr.dk/radio/player/?%s' % ChannelsAndNews['Cid']))
-#									Log.Debug(ChannelsAndNews['Cid'])
-#	[dir.add(getLiveRadioChannel(str)) for str in channel]
 	return dir
 
-def LiveTV():
-	#http://www.dr.dk/nu/embed/live?height=467&width=830
-	dir = ObjectContainer(view_group="List", title1 = NAME, title2 = "Live TV", art = R(ART) )
-	drChannels = JSON.ObjectFromURL("http://www.dr.dk/mu/Bundle?BundleType='Channel'&ChannelType='TV'&DrChannel=true&limit=$eq(0)&SourceUrl=$orderby('asc')")
+@route('/video/drnu/lettermenu/{programs}', programs = dict)
+def LetterMenu(programs):
+	dir = ObjectContainer(view_group="List", title1 = NAME, title2 = NAME)
+#	pgm = ProgramCardFromBundle(programs)
+#	Log.Debug('-------------')
+#	Log.Debug(ProgramCardFromBundle(programs))
 	
-	for channel in drChannels['Data']:
-		Log.Debug(channel['Slug'])
-		dir.add(VideoClipObject(title = channel['Title'], 
-							thumb = channel['Slug'] + '_icon-default.png',
-							url = "http://www.dr.dk/TV/live/%s" % channel['Slug']))
-
-	
-	return dir
-
-def ProgramSerierMenu(id,title, offset):
-	dir = ObjectContainer(view_group = "List", title1 = NAME, title2 = title )
-	bucket = dict()
-	letter = ''
-	drSeries = JSON.ObjectFromURL("http://www.dr.dk/mu/View/bundles-with-public-asset?DrChannel=true&ChannelType='TV'&limit=$eq(0)&Title=$orderby('asc')")
-	bucket = dict()
-	letter = ''
-	for program in drSeries['Data']:
-		
-		slug=program["Slug"]
-		title=program["Title"]
-		summary = program['Description']
-		thumb = R(ICON)
-		Members = list()
-		for Relations in program['Relations']:
-			if Relations['Kind'] == 'Member':
-				#Log.Debug(Relations['Urn'])
-				Log.Debug(Relations)
-				Members.append(Relations['Urn'])
-
-		letter = title[0].upper()
-		if letter not in bucket:
-			bucket[letter] = list()
-		tuple = dict(title=title,thumb=thumb,summary=summary,id=slug, members = Members)
-		bucket[letter].append(tuple)
-
-	for firstChar in sorted(bucket.iterkeys()):
-		serier = bucket[firstChar]
-
-		dir.add(DirectoryObject(title = firstChar, 
-							art = R(ART), 
-							thumb = R(ICON), 
-							key = Callback(LetterMenu, 
-										title = firstChar, 
-										serier = serier )))
-		
-
-				
-	return dir
-
-def LetterMenu(title, serier):
-	dir = ObjectContainer(view_group="List", title1 = NAME, title2 = title)
-	for serie in serier:
-		dir.add(DirectoryObject(title = serie['title'], 
-							summary = serie['summary'],
-							art = R(ART), 
+	for program in programs:
+		dir.add(DirectoryObject(title = program['Title'],
+							summary = program['Description'],
+							art = R(ART),
 							thumb = R(ICON),
-							key = Callback(CreateVideoItem, title = serie['title'], items = serie) ))
+							key = Callback(ProgramCard,
+										title1 = NAME,
+										title2 = program['Title'],
+										Relations_Slug = "'%s'" % program['Slug'])))
 
-	return dir
-
-def CreateVideoItem(items, title):
-	dir = ObjectContainer(view_group = "List", title1 = NAME, title2 = String.Unquote('title') )
-	for member in items['members']:
-		programcard = JSON.ObjectFromURL("http://www.dr.dk/mu/programcard?Urn=$eq('%s')" % member)['Data'][0]
-		if 'Assets' in 	programcard:
-			if len(programcard['Assets']) > 0:
-				title = ''
-				for broadcasts in programcard['Broadcasts']:
-					if 'Punchline' in broadcasts and broadcasts['Punchline'] is not '':
-						title = programcard['Title'] + ' (' + broadcasts['Punchline'] + ')'
-						break
-					else:
-						title = programcard['Title']
-				dir.add(VideoClipObject(title = title,
-									summary = programcard['Description'],
-									url = "http://www.dr.dk/TV/se/%s/%s" % (items['id'],programcard['Slug'])))
-			
-	
 	return dir
 
 def getRadioMetadata(channelId):
@@ -224,29 +174,230 @@ def getRadioMetadata(channelId):
 		
 	return strNowNext
 
-def getTVLiveMetadata(channelID):
-	# this is a undocumented feature that might break the plugin
+def getTVLiveMetadata(slug):
+	nowNext = JSON.ObjectFromURL('http://www.dr.dk/TV/live/info/%s/json' % slug)
+	description = ""
+	# now
+	if 'Now' in nowNext:	
+		description += 'Nu:'
+		if 'Title' in nowNext['Now']:
+			description += ' ' + nowNext['Now']['Title']
+	#===========================================================================
+	#	if 'StartTimestamp' in nowNext['Now']:
+	#		
+	#		description += ' (' + datetime.datetime.fromtimestamp(nowNext['Now']['StartTimestamp']/1000).strftime('%H:%M')
+	#	if 'EndTimestamp' in nowNext['Now']:
+	#		description += ' - ' + datetime.datetime.fromtimestamp(nowNext['Now']['EndTimestamp']/1000).strftime('%H:%M')+')'
+	#	else:
+	#		description += ')'
+	# 
+	#	if 'Description' in nowNext['Now']:
+	#===========================================================================
+			description += '\n' + String.StripTags(nowNext['Now']['Description'])
+	else:
+		description += 'Ingen udsendelser'
+	
+	# next
+	if 'Next' in nowNext:
+		description+= u'\n\nN\xe6ste:'
+		if 'Title' in nowNext['Next']:
+			description += ' ' + nowNext['Next']['Title']
+	#===========================================================================
+	#	if 'StartTimestamp' in nowNext['Next']:
+	#		
+	#		description += ' (' + datetime.datetime.fromtimestamp(nowNext['Next']['StartTimestamp']/1000).strftime('%H:%M')
+	#	if 'EndTimestamp' in nowNext['Next']:
+	#		description += ' - ' + datetime.datetime.fromtimestamp(nowNext['Next']['EndTimestamp']/1000).strftime('%H:%M')+')'
+	#	else:
+	#		description += ')'
+	# 
+	#===========================================================================
+		if 'Description' in nowNext['Next']:
+			description += '\n' + String.StripTags(nowNext['Next']['Description'])
+	
+	return description
 
-	channels = JSON.ObjectFromURL(TV_NOWNEXT_URL, cacheTime=60)
-	title_now = "Ingen titel tilgængenlig"
-	title_next = "Ingen titel tilgængenlig"
-	description_now = ""
-	description_next = ""
+#######################################################
+
+
+
+@route('/video/drnu/asset')
+def Asset(**kwargs):
+	return None
+
+@route('/video/drnu/bar')
+def Bar(**kwargs):
+	return None
+
+@route('/video/drnu/bundle/{title1}/{title2}/{live}/{kwargs}')
+def Bundle(title2 = NAME, title1 = NAME,  live = False, **kwargs):
+	dir = ObjectContainer(view_group="List", title1 = title1, title2 = title2, art = R(ART) )
+	url = argsToURLString(APIURL = "http://www.dr.dk/mu/Bundle", args = kwargs)
+	try:
+		drChannels = JSON.ObjectFromURL(url)
+	except:
+		raise Ex.MediaNotAvailable
+	
+	for channel in drChannels['Data']:	
+		description = ""
+		if live:
+			try:
+				serviceURL = "http://www.dr.dk/TV/live/%s"
+				description = getTVLiveMetadata(channel['Slug'] )
+			except:
+				Log.Debug('Fejl ved forsøg på at hente metadata for live kanal ' + channel['Slug'])
 				
-	for channel in channels["channels"]:
-		if channelID in channel['channel'] :
-			if channel['current']:
-				if channel['current']:
-					title_now = channel['current']['programTitle']
-				if channel['current']['description']:
-					description_now = channel['current']['description']
-			if channel['next']:
-				if channel['next']['programTitle']:
-					title_next = channel['next']['programTitle']
-				if channel['next']['description']:
-					description_next = channel['next']['description']
-			break
+			dir.add(VideoClipObject(title = channel['Title'], 
+				thumb = R(channel['Slug'] + '_icon-default.png'),
+				summary = description,
+				url = serviceURL % channel['Slug']))
 				
-	title = "Nu: " + title_now + "\n" + description_now  + "\n\nNaeste: " + title_next + "\n" + description_next
 			
-	return str(String.StripTags(title))
+		else:
+			serviceURL = "http://www.dr.dk/TV/se/%s/%s"
+			description = 'Noget Andet'
+
+	return dir
+
+@route('/video/drnu/programcard/{title1}/{title2}' )
+def ProgramCard(title1 = NAME, title2 = NAME, **kwargs):
+	dir = ObjectContainer(view_group = "List", title1 = title1, title2 = title2 )
+	try:
+		programcards = JSON.ObjectFromURL(argsToURLString(APIURL=PROGRAMCARD_URL, args=kwargs))
+	except:
+		raise Ex.MediaNotAvailable
+	programcards = stripProgramCards(programcards)
+#	Log.Debug(programcards['Data'])
+	for pc in programcards['Data']:
+#		Log.Debug(pc.get('Broadcasts'))
+		Log.Debug(pc.get('hasMedia'))
+		if pc.get('hasMedia'):
+			dir.add(VideoClipObject(title = pc['Title'],
+								thumb = pc.get('Thumb', R(ICON)),
+								summary = pc['Description'],
+								url = "http://www.dr.dk/TV/se/plex/%s" % pc['Slug']))
+		
+	return dir
+
+@route('/video/drnu/programviews')
+def ProgramViews(**kwargs):
+	return None
+
+@route('/video/drnu/bundleswithlastbroadcast')
+def bundles_with_last_broadcast(**kwargs):
+	return None
+
+@route('/video/drnu/bundleswithpublicasset', title = String, groupby = String)
+def bundles_with_public_asset(title = NAME, groupby = 'firstChar', **kwargs):
+	dir = ObjectContainer(view_group="List", title1 = NAME, title2 = title)
+
+	drJSON = JSON.ObjectFromURL(argsToURLString(APIURL=BUNDLESWITHPUBLICASSET_URL, args=kwargs))
+	pgmStrip = ['ResultGenerated','ResultProcessingTime', 'ResultSize', 'TotalSize']
+	dataStrip = ['Version','ChannelType','Dirty','DrChannel','MasterEpgSeriesIdentifiers','Relations',
+				'StartPublish','EndPublish','CreatedBy','CreatedTime','LastModified','ModifiedBy',
+				'BundleType','SiteUrl','CardType']
+
+	if groupby == 'firstChar':
+		bucket = dict()
+		letter = ''
+		for delPar in pgmStrip:
+			if delPar in drJSON:
+				del drJSON[delPar]
+		for pgm in drJSON['Data']:
+			for delPar in dataStrip:
+				if delPar in pgm:
+					del pgm[delPar]
+			if pgm['Title'][0] not in bucket:
+				bucket[pgm['Title'][0].upper()] = list()
+			bucket[pgm['Title'][0]].append(pgm)
+		for firstChar in sorted(bucket.iterkeys()):
+			dir.add(DirectoryObject(title = firstChar,
+				art = R(ART),
+				thumb = R(ICON),
+				summary = "Programmer der begynder med " + firstChar,
+				key = Callback(LetterMenu, programs = bucket[firstChar])))
+	return dir
+def argsToURLString(APIURL, args):
+	url = APIURL;
+	if len(args)>0:
+		url+='?'
+		for urlArgs in args:
+			url += urlArgs.replace('_', '.') + '=' + args[urlArgs] + '&'
+		url = url.rstrip('&')
+	return url
+
+def stripProgram(program):
+	pgm = program
+	delList = ['Version', 'ChannelType', 'Dirty', 'DrChannel', 'MasterEpgSeriesIdentifiers', 'CreatedBy', 'CreatedTime', 'LastModified', 'ModifiedBy', 'EndPublish']
+	for delPar in delList:
+		if delPar in pgm:
+			del pgm[delPar]
+	return pgm
+def stripProgramCards(programcards):
+	delList = ['Version','ChannelType','Dirty', 'ProductionNumber', 'RtmpHost', 'Relations','CreatedBy', 'CreatedTime','LastModified', 'ModifiedBy','SiteUrl','CardType', 'Relations']
+	checkList = ['Title', 'Description']
+	geoFilter = JSON.ObjectFromURL('http://www.dr.dk/TV/geofilter')['outsideDenmark']
+	seriesrules = JSON.ObjectFromURL('http://www.dr.dk/mu/configuration/SeriesRules')['Data'][0]['Rules']
+#	hasMedia = False
+	try:
+		
+		for programcard in programcards['Data']:
+			for delPar in delList:
+				if programcard.get(delPar): del programcard[delPar]
+#			Log.Debug(len(programcard.get('Broadcasts')))
+			if programcard.get('Broadcasts'):
+				for broadcast in programcard.get('Broadcasts', dict()):
+#					if broadcast['IsRerun']: del broadcast
+					for checkPar in checkList:
+						if programcard[checkPar] is None or programcard[checkPar] == "" :
+							programcard[checkPar] = broadcast.get(checkPar)
+					if 'AnnouncedStartTime' not in programcard:
+						programcard['AnnouncedStartTime'] = broadcast.get('AnnouncedStartTime', '0001-01-01T00:00:00Z')
+					else:
+						programTime = Datetime.ParseDate(programcard['AnnouncedStartTime'])
+						broadcastTime = Datetime.ParseDate(broadcast.get('AnnouncedStartTime', '0001-01-01T00:00:00Z'))
+						if broadcastTime>programTime:
+							programcard['AnnouncedStartTime'] = broadcast.get('AnnouncedStartTime', '0001-01-01T00:00:00Z')
+					if 'AnnouncedEndTime' not in programcard:
+						programcard['AnnouncedEndTime'] = broadcast.get('AnnouncedEndTime', '0001-01-01T00:00:00Z')
+					else:
+						programTime = Datetime.ParseDate(programcard['AnnouncedEndTime'])
+						broadcastTime = Datetime.ParseDate(broadcast.get('AnnouncedEndTime', '0001-01-01T00:00:00Z'))
+						if broadcastTime>programTime:
+							programcard['AnnouncedEndTime'] = broadcast.get('AnnouncedEndTime', '0001-01-01T00:00:00Z')
+				hasMedia = False
+				for assets in programcard.get('Assets', dict()):
+#					if assets.get('Kind') == 'VideoResource' and assets.get('Uri') and assets.get('RestrictedToDenmark') is True:
+#						raise Ex.MediaGeoblocked
+					if assets.get('Kind') == 'VideoResource' and assets.get('Uri'):
+						hasMedia = True
+					if assets.get('Kind') == 'Image' and assets.get('Uri'):
+						programcard['Thumb'] = assets['Uri'] + '&width=512&height=512'
+				programcard['hasMedia'] = hasMedia
+				if programcard.get('Assets'): del programcard['Assets']
+				for rules in seriesrules:
+					if re.search(rules['RegEx'], programcard['Title']):
+						if programcard['PrimaryChannel'] in rules.get('Channels', dict()) or 'ReplaceEx' in rules:
+							programcard['Title'] = re.sub(rules['RegEx'], rules['ReplaceEx'], programcard['Title'], 1)
+						programcard['Title'] = programcard['Title'] + Datetime.ParseDate(programcard['AnnouncedStartTime']).strftime(' (%d/%m-%y)')
+						break
+#				if hasMedia is False: del programcard
+#				Log.Debug(programcard.get('Broadcasts','0'))
+				del programcard['Broadcasts']
+
+#				Log.Debug(hasMedia)
+#				Log.Debug(programcard['Title'])
+#				Log.Debug(len(programcard.get('Broadcasts', 0)))
+#				if len(programcard.get('Broadcasts', 0)) == 1:
+#					Log.Debug(programcard)
+	except Ex.MediaNotAvailable:
+		pass
+	except Ex.MediaGeoblocked:
+		pass
+
+	
+	return programcards
+
+def stripBundle(bundle):
+	
+	return bundle
