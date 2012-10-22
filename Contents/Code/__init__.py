@@ -1,9 +1,6 @@
-import time
-import datetime
+#import time
+#import datetime
 import re
-#Ex.MediaNotAvailable
-#Ex.MediaNotAuthorized
-#Ex.MediaGeoblocked
 #####################################################################################################
 
 VIDEO_PREFIX = "/video/drnu"
@@ -29,18 +26,19 @@ BUNDLESWITHPUBLICASSET_URL = 'http://www.dr.dk/mu/View/bundles-with-public-asset
 
 def ValidatePrefs():
 	Locale.DefaultLocale = Prefs['language']
-	
+
 def Start():
 
 	Plugin.AddPrefixHandler(VIDEO_PREFIX, VideoMainMenu, NAME, ICON, ART)
 #	Plugin.AddPrefixHandler(MUSIC_PREFIX, MusicMainMenu, NAME, ICON, ART)
 	Plugin.AddViewGroup("InfoList", viewMode="InfoList", mediaType="items")
 	Plugin.AddViewGroup("List", viewMode="List", mediaType="items")
-	MediaContainer.art = R(ART)
-	MediaContainer.title1 = NAME
+	ObjectContainer.art = R(ART)
+	ObjectContainer.title1 = NAME
 	DirectoryItem.thumb = R(ICON)
 	HTTP.Headers['User-Agent'] = "Mozilla/5.0 (Macintosh; U; Intel Mac OS X 10.7; en-US; rv:1.9.2.13) Gecko/20101203 Firefox/3.6.13"
 #	Locale.DefaultLocale = Prefs['language']
+
 def VideoMainMenu():
 	dir = ObjectContainer(view_group = "List", title1 = NAME, title2 = "TV", art = R(ART))
 	global CONFIGURATION
@@ -85,6 +83,7 @@ def MusicMainMenu():
 	dir.add(DirectoryObject(title = "TV", summary = "Lyt til radio", art = R(ART), thumb = R(ICON), key = Callback(VideoMainMenu)))
 #	dir.add(PrefsObject(title = "Indstillinger...", summary="Indstil DR NU plug-in", thumb = R(ICON), art = R(ART)))
 	return dir
+
 @route('/music/drnu/live')
 def LiveRadioMenu():
 	dir = ObjectContainer(view_group = "List", title1 = NAME, title2 = L("Live Radio"), art = R(ART))
@@ -97,6 +96,7 @@ def LiveRadioMenu():
 				else:
 					dir.add(DirectoryObject(title = 'P4', key = Callback(LiveRadioP4Menu)))
 	return dir
+
 @route('/music/drnu/live/p4')
 def LiveRadioP4Menu():
 	dir = ObjectContainer(view_group="List",title1 = NAME, title2 = "P4", art = R(ART))
@@ -159,7 +159,7 @@ def getRadioMetadata(channelId):
 			stop_next = "-" + JSONobj['nextProgram']['stop'].split('T')[1].split(':')[0]+":"+JSONobj['nextProgram']['stop'].split('T')[1].split(':')[1]
 
 	try:
-		JSONobjTracks = JSON.ObjectFromURL(RADIO_TRACKS_URL % channelId, cacheTime=30, errors='Ingore')
+		JSONobjTracks = JSON.ObjectFromURL(RADIO_TRACKS_URL % channelId, cacheTime=30)
 		if JSONobjTracks['tracks']:
 			pre1 = "\n\nSeneste Titel: "
 			for track in JSONobjTracks['tracks']:
@@ -270,10 +270,10 @@ def ProgramCard(title1 = NAME, title2 = NAME, **kwargs):
 #	Log.Debug(programcards['Data'])
 	for pc in programcards['Data']:
 #		Log.Debug(pc.get('Broadcasts'))
-		Log.Debug(pc.get('hasMedia'))
+		#Log.Debug(pc.get('hasMedia'))
 		if pc.get('hasMedia'):
 			dir.add(VideoClipObject(title = pc['Title'],
-								thumb = pc.get('Thumb', R(ICON)),
+								thumb = Resource.ContentsOfURLWithFallback(pc.get('Thumb'), fallback=ICON),
 								summary = pc['Description'],
 								url = "http://www.dr.dk/TV/se/plex/%s" % pc['Slug']))
 		
@@ -317,6 +317,7 @@ def bundles_with_public_asset(title = NAME, groupby = 'firstChar', **kwargs):
 				summary = "Programmer der begynder med " + firstChar,
 				key = Callback(LetterMenu, programs = bucket[firstChar])))
 	return dir
+
 def argsToURLString(APIURL, args):
 	url = APIURL;
 	if len(args)>0:
@@ -333,6 +334,7 @@ def stripProgram(program):
 		if delPar in pgm:
 			del pgm[delPar]
 	return pgm
+
 def stripProgramCards(programcards):
 	delList = ['Version','ChannelType','Dirty', 'ProductionNumber', 'RtmpHost', 'Relations','CreatedBy', 'CreatedTime','LastModified', 'ModifiedBy','SiteUrl','CardType', 'Relations']
 	checkList = ['Title', 'Description']
@@ -395,9 +397,4 @@ def stripProgramCards(programcards):
 	except Ex.MediaGeoblocked:
 		pass
 
-	
 	return programcards
-
-def stripBundle(bundle):
-	
-	return bundle
