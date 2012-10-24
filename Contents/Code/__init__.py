@@ -37,7 +37,7 @@ def ValidatePrefs():
 def Start():
 
 	Plugin.AddPrefixHandler(VIDEO_PREFIX, VideoMainMenu, NAME, ICON, ART)
-#	Plugin.AddPrefixHandler(MUSIC_PREFIX, MusicMainMenu, NAME, ICON, ART)
+	Plugin.AddPrefixHandler(MUSIC_PREFIX, MusicMainMenu, NAME, ICON, ART)
 	Plugin.AddViewGroup("InfoList", viewMode="InfoList", mediaType="items")
 	Plugin.AddViewGroup("List", viewMode="List", mediaType="items")
 	MediaContainer.art = R(ART)
@@ -49,18 +49,23 @@ def Start():
 ###################################################################################################
 
 def VideoMainMenu():
-	dir = ObjectContainer(view_group = "List", title1 = NAME, title2 = "TV", art = R(ART))
+	
+	# set globals
 	global CONFIGURATION
 	global CONFIGURATION_SERIESRULES
 	
+	# create OC
+	dir = ObjectContainer(view_group = "List", title1 = NAME, title2 = "TV", art = R(ART))
+	
 	# check if DR is available
 	try:
-#		CONFIGURATION = JSON.ObjectFromURL('http://www.dr.dk/mu/Configuration')
-		CONFIGURATION_SERIESRULES = JSON.ObjectFromURL('http://www.dr.dk/mu/configuration/SeriesRules')
+		CONFIGURATION 				= JSON.ObjectFromURL('http://www.dr.dk/mu/Configuration')
+		CONFIGURATION_SERIESRULES 	= JSON.ObjectFromURL('http://www.dr.dk/mu/configuration/SeriesRules')
 	except :
 		dir.header = "UPS!!!"
 		dir.message = "Ingen forbindelse til DR"
 	else:
+		
 		# add live stream
 		dir.add(DirectoryObject(
 							title 		= 'Live TV', 
@@ -68,13 +73,22 @@ def VideoMainMenu():
 							art 		= R(ART),  
 							thumb 		= R(ICON), 
 							key 		= Callback(Bundle, 
-											title2		="Live", 
+											title2		="Live TV", 
 											live 		= True, 
 											BundleType	="'Channel'", 
 											ChannelType	="'TV'", 
 											DrChannel 	= 'true', 
 											limit		='$eq(0)', 
 											SourceUrl	="$orderby('asc')")))
+		
+		# add live radio
+		dir.add(DirectoryObject(
+							title 		= 'Live Radio', 
+							summary 	= 'Lyt til live Radio', 
+							art 		= R(ART),  
+							thumb 		= R(ICON), 
+							key 		= Callback(LiveRadioMenu)))
+		
 		# add program overview
 		dir.add(DirectoryObject(
 							title 		= 'Programmer', 
@@ -88,43 +102,127 @@ def VideoMainMenu():
 											ChannelType = "'TV'", 
 											limit		="$eq(0)", 
 											Title 		= "$orderby('asc')")))
-	
-	return dir
+		
+		# add newest overview
+		dir.add(DirectoryObject(
+							title 		= 'Nyeste programmer', 
+							summary 	= 'Se de nyeste programmer fra DR', 
+							art 		= R(ART), 
+							thumb 		= R(ICON), 
+							key 		= Callback(bundle_overview, 
+											title 		= 'Nyeste programmer',
+											url			= 'http://www.dr.dk/mu/programcard/relations/member/urn:dr:mu:bundle:4f476465860d9a215449ff02',
+											ChannelType = "'TV'", 
+											limit		="$eq(0)")))
+		
+		# add DR Update news overview
+		dir.add(DirectoryObject(
+							title 		= 'Nyheder fra DR Update', 
+							summary 	= 'Se nyheder fra DR Update', 
+							art 		= R(ART), 
+							thumb 		= R('dr-update-2_icon-default.png'), 
+							key 		= Callback(bundle_overview, 
+											title 		= 'Nyheder fra DR Update',
+											url			= 'http://www.dr.dk/mu/programcard/relations/member/urn:dr:mu:bundle:4f3b88e3860d9a33ccfdadcb?Assets.Kind="VideoResource"&Broadcasts.BroadcastDate=$orderby("desc")',
+											ChannelType = "'TV'", 
+											limit		="$eq(20)")))
+		
+		# add preview overview
+		dir.add(DirectoryObject(
+							title 		= 'Forpremiere', 
+							summary 	= 'Se forpremiere fra DR', 
+							art 		= R(ART), 
+							thumb 		= R(ICON), 
+							key 		= Callback(bundle_overview, 
+											title 		= 'Forpremiere',
+											url			= 'http://www.dr.dk/mu/programcard/relations/member/urn:dr:mu:bundle:4f476dd4860d9a215449ff03',
+											ChannelType = "'TV'", 
+											limit		="$eq(0)")))
+		
+		return dir
 
 ###################################################################################################
 
 def MusicMainMenu():
+	
+	# create OC
 	dir = ObjectContainer(view_group="List", title1 = NAME, title2 = "Radio", art = R(ART))
-	dir.add(DirectoryObject(title = "Live Radio", summary = "Lyt til Live Radio", art = R(ART), thumb = R(ICON), key = Callback(LiveRadioMenu)))
-	dir.add(DirectoryObject(title = "TV", summary = "Lyt til radio", art = R(ART), thumb = R(ICON), key = Callback(VideoMainMenu)))
+	
+	# add radio overview
+	dir.add(DirectoryObject(
+						title 		= "Live Radio", 
+						summary 	= "Lyt til Live Radio", 
+						art 		= R(ART), 
+						thumb 		= R(ICON), 
+						key 		= Callback(LiveRadioMenu)))
+	
+	# add tv overview
+	dir.add(DirectoryObject(
+						title 		= "Se TV", 
+						summary 	= "Se TV", 
+						art 		= R(ART), 
+						thumb 		= R(ICON), 
+						key 		= Callback(VideoMainMenu)))
+	
 #	dir.add(PrefsObject(title = "Indstillinger...", summary="Indstil DR NU plug-in", thumb = R(ICON), art = R(ART)))
+	
 	return dir
 
 ###################################################################################################
 
 @route('/music/drnu/live')
 def LiveRadioMenu():
+	
+	# create OC
 	dir = ObjectContainer(view_group = "List", title1 = NAME, title2 = L("Live Radio"), art = R(ART))
+	
+	# run through live radio
 	for myLoop in CONFIGURATION['Data']:
+		
+		# only show if Id == RADIOVisibleFrontPageChannels
 		if myLoop.get('Id') == 'RADIOVisibleFrontPageChannels':
+			
 			for Order in myLoop['Order']:
+				
 				if '{' not in Order:
+					
 					drMeta = JSON.ObjectFromURL("http://www.dr.dk/mu/Bundle?BundleType='Channel'&ChannelType='RADIO'&DrChannel=true&limit=$eq(1)&SourceUrl=$eq('dr.dk/mas/whatson/channel/%s')" % Order.rsplit('/',1)[1])
-					dir.add(VideoClipObject(title = drMeta['Data'][0]['Title'], url = 'http://www.dr.dk/radio/player/?%s' % 'P3'))
+					
+					dir.add(VideoClipObject(
+										title 		= drMeta['Data'][0].get('Title'),
+										summary 	= drMeta['Data'][0].get('Punchline',''), 
+										art 		= R(ART), 
+										thumb 		= R(ICON), 
+										url 		= 'http://www.dr.dk/radio/player/?%s' % 'P3'))
 				else:
-					dir.add(DirectoryObject(title = 'P4', key = Callback(LiveRadioP4Menu)))
+					dir.add(DirectoryObject(
+										title 		= 'P4', 
+										art 		= R(ART), 
+										thumb 		= R(ICON), 
+										key 		= Callback(LiveRadioP4Menu)))
+	
 	return dir
 
 ###################################################################################################
 
 @route('/music/drnu/live/p4')
 def LiveRadioP4Menu():
+	
+	# create OC
 	dir = ObjectContainer(view_group="List",title1 = NAME, title2 = "P4", art = R(ART))
+	
+	# run through all P4 channels
 	for p4Loop in CONFIGURATION['Data']:
-						if p4Loop.get('Id') == 'RADIOLocalNews':
-							for ChannelsAndNews in p4Loop['ChannelsAndNews']:
-								if '4' in ChannelsAndNews['PrimaryChannel']:
-									dir.add(VideoClipObject(title = ChannelsAndNews['Title'], url = 'http://www.dr.dk/radio/player/?%s' % ChannelsAndNews['Cid']))
+		
+		if p4Loop.get('Id') == 'RADIOLocalNews':
+			for ChannelsAndNews in p4Loop['ChannelsAndNews']:
+				if '4' in ChannelsAndNews['PrimaryChannel']:
+					dir.add(VideoClipObject(
+										title 		= ChannelsAndNews['Title'], 
+										art 		= R(ART), 
+										thumb 		= R(ICON), 
+										url 		= 'http://www.dr.dk/radio/player/?%s' % ChannelsAndNews['Cid']))
+					
 	return dir
 
 ###################################################################################################
@@ -360,20 +458,20 @@ def ProgramViews(**kwargs):
 
 ###################################################################################################
 
-@route('/video/drnu/bundleswithlastbroadcast', title = String)
-def bundles_with_last_broadcast(title = NAME, **kwargs):
+@route('/video/drnu/bundle_overview', title = String, url = String)
+def bundle_overview(title = NAME, url = '', **kwargs):
 	
 	# create OC
 	dir = ObjectContainer(view_group="List", title1 = NAME, title2 = title)
 
 	# try to fetch program cards or raise exception
 	try:
-		programcards = JSON.ObjectFromURL(argsToURLString(APIURL=BUNDLESLASTBROADCAST_URL, args=kwargs))
+		programcards = JSON.ObjectFromURL(argsToURLString(url, args=kwargs))
 	except:
 		raise Ex.MediaNotAvailable
 	
 	# strip programcards
-	programcards = stripLastBroadCastProgramCards(programcards)
+	programcards = stripProgramCards(programcards)
 	
 	# run through all programcards
 	for program in programcards['Data']:
@@ -386,7 +484,7 @@ def bundles_with_last_broadcast(title = NAME, **kwargs):
 		slug		= program.get('Slug')
 		art			= R(ART)
 		thumb		= program.get('Thumb',R(ICON))
-		
+		Log.Info('INFO TITLE: ' + title)
 		# only add VCO if program has media
 		if program.get('hasMedia'):
 			dir.add(VideoClipObject(
@@ -397,7 +495,7 @@ def bundles_with_last_broadcast(title = NAME, **kwargs):
 								thumb 	= thumb,
 								art 	= art,
 								url 	= "http://www.dr.dk/TV/se/plex/%s" % slug))
-		
+	
 	return dir
 
 ###################################################################################################
@@ -458,12 +556,6 @@ def stripProgram(program):
 	return pgm
 
 ###################################################################################################
-
-def stripLastBroadCastProgramCards(programcards):
-
-	return stripProgramCards(programcards)
-
-###################################################################################################	
 
 def stripProgramCards(programcards):
 	
