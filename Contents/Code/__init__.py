@@ -249,9 +249,9 @@ def ProgramMenu():
 	
 	# add program overview by name
 	dir.add(InputDirectoryObject(
-						title 		= 'Soeg efter program...', 
-						summary 	= 'Soeg efter et program hos DR.', 
-						prompt		= 'Soegord:',
+						title 		= 'Søg efter program...'.decode('utf-8'), 
+						summary 	= 'Søg efter et program hos DR.'.decode('utf-8'),
+						prompt		= 'Søgeord:'.decode('utf-8'),
 						key 		= Callback(bundles_with_public_asset, 
 											title 		= 'Programmer',
 											groupby 	= 'name', 
