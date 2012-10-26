@@ -640,8 +640,10 @@ def getProgram(program):
 	title 		= program.get('Title')
 	punchline	= program.get('Subtitle')
 	year		= program.get('ProductionYear')
+	date		= Datetime.ParseDate(program.get('FirstBroadcastStartTime'))
 	description = program.get('Description')
 	slug		= program.get('Slug')
+	duration	= program.get('Duration')
 	thumb		= program.get('Thumb',R(ICON))
 	
 	# return vco
@@ -649,7 +651,8 @@ def getProgram(program):
 				title 		= title,
 				tagline 	= punchline,
 				summary 	= description,
-				year		= year,
+				originally_available_at = date,
+				duration	= duration,
 				art 		= R(ART),
 				thumb 		= thumb,
 				url 		= "http://www.dr.dk/TV/se/plex/%s" % slug)
@@ -657,12 +660,16 @@ def getProgram(program):
 ###################################################################################################
 
 def stripProgram(program):
-	pgm = program
+	
+	# set variables
 	delList = ['Version', 'ChannelType', 'Dirty', 'DrChannel', 'MasterEpgSeriesIdentifiers', 'CreatedBy', 'CreatedTime', 'LastModified', 'ModifiedBy', 'EndPublish']
+	
+	# remove unwanted data
 	for delPar in delList:
-		if delPar in pgm:
-			del pgm[delPar]
-	return pgm
+		if delPar in program:
+			del program[delPar]
+			
+	return program
 
 ###################################################################################################
 
@@ -680,6 +687,7 @@ def stripProgramCards(programcards):
 			
 			# set variables
 			hasMedia = False
+			programcard['Duration'] = 0
 			
 			# remove unnecessary items 
 			for delPar in delList:
@@ -714,6 +722,8 @@ def stripProgramCards(programcards):
 					# check if program has media
 					if asset.get('Kind') == 'VideoResource' and asset.get('Uri'):
 						hasMedia = True
+						if asset.get('DurationInMilliseconds'):
+							programcard['Duration'] = asset.get('DurationInMilliseconds')
 						
 					# check if program has image
 					if asset.get('Kind') == 'Image' and asset.get('Uri'):
@@ -735,32 +745,50 @@ def stripProgramCards(programcards):
 					
 					# check must have variables
 					for checkPar in checkList:
+						
 						# if not found in programcard, try get it from broadcast json
 						if programcard.get(checkPar) is None or programcard.get(checkPar) == "" :
 							programcard[checkPar] = broadcast.get(checkPar)
 					
-					if 'AnnouncedStartTime' not in programcard:
-						programcard['AnnouncedStartTime'] = broadcast.get('AnnouncedStartTime', '0001-01-01T00:00:00Z')
-					else:
-						programTime = Datetime.ParseDate(programcard['AnnouncedStartTime'])
-						broadcastTime = Datetime.ParseDate(broadcast.get('AnnouncedStartTime', '0001-01-01T00:00:00Z'))
-						if broadcastTime>programTime:
+					
+					# find first start date in broadcast - assume its first run
+					if 'FirstBroadcastStartTime' not in programcard:
+					
+						if 'AnnouncedStartTime' not in programcard:
 							programcard['AnnouncedStartTime'] = broadcast.get('AnnouncedStartTime', '0001-01-01T00:00:00Z')
-					if 'AnnouncedEndTime' not in programcard:
-						programcard['AnnouncedEndTime'] = broadcast.get('AnnouncedEndTime', '0001-01-01T00:00:00Z')
-					else:
-						programTime = Datetime.ParseDate(programcard['AnnouncedEndTime'])
-						broadcastTime = Datetime.ParseDate(broadcast.get('AnnouncedEndTime', '0001-01-01T00:00:00Z'))
-						if broadcastTime>programTime:
+						else:
+							programTime = Datetime.ParseDate(programcard['AnnouncedStartTime'])
+							broadcastTime = Datetime.ParseDate(broadcast.get('AnnouncedStartTime', '0001-01-01T00:00:00Z'))
+							if broadcastTime>programTime:
+								programcard['AnnouncedStartTime'] = broadcast.get('AnnouncedStartTime', '0001-01-01T00:00:00Z')
+						
+						# set first broadcast start / end
+						if programcard.get('AnnouncedStartTime'):
+							programcard['FirstBroadcastStartTime'] = programcard.get('AnnouncedStartTime')
+						
+					# find first end date in broadcast - assume its first run
+					if 'FirstBroadcastEndTime' not in programcard:
+						
+						if 'AnnouncedEndTime' not in programcard:
 							programcard['AnnouncedEndTime'] = broadcast.get('AnnouncedEndTime', '0001-01-01T00:00:00Z')
-				
-					# set title
-					for rules in seriesrules:
-						if re.search(rules['RegEx'], programcard['Title']):
-							if programcard.get('PrimaryChannel') in rules.get('Channels', dict()) or 'ReplaceEx' in rules:
-								programcard['Title'] = re.sub(rules['RegEx'], rules['ReplaceEx'], programcard['Title'], 1)
-							programcard['Title'] = programcard['Title'] + Datetime.ParseDate(programcard['AnnouncedStartTime']).strftime(' (%d/%m-%y)')
-							break
+						else:
+							programTime = Datetime.ParseDate(programcard['AnnouncedEndTime'])
+							broadcastTime = Datetime.ParseDate(broadcast.get('AnnouncedEndTime', '0001-01-01T00:00:00Z'))
+							if broadcastTime>programTime:
+								programcard['AnnouncedEndTime'] = broadcast.get('AnnouncedEndTime', '0001-01-01T00:00:00Z')
+					
+						
+						# set first broadcast start / end
+						if programcard.get('AnnouncedEndTime'):
+							programcard['FirstBroadcastEndTime'] = programcard.get('AnnouncedEndTime')
+					
+				# set title
+				for rules in seriesrules:
+					if re.search(rules['RegEx'], programcard['Title']):
+						if programcard.get('PrimaryChannel') in rules.get('Channels', dict()) or 'ReplaceEx' in rules:
+							programcard['Title'] = re.sub(rules['RegEx'], rules['ReplaceEx'], programcard['Title'], 1)
+						programcard['Title'] = programcard['Title'] + Datetime.ParseDate(programcard['AnnouncedStartTime']).strftime(' (%d-%m-%y)')
+						break
 					
 				# remove broadcasts
 				del programcard['Broadcasts']
