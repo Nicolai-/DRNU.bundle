@@ -57,22 +57,22 @@ def VideoMainMenu():
 
 	
 	# create OC
-	dir = ObjectContainer(view_group = "List", title1 = NAME, title2 = "TV")
+	dir = ObjectContainer(view_group = "List", title1 = NAME, title2 = unicode(L('TVTitle')))
 	
 	# check if DR is available
 	try:
 		CONFIGURATION = JSON.ObjectFromURL('http://www.dr.dk/mu/Configuration')
 	except :
-		dir.header = "UPS!!!"
-		dir.message = "Ingen forbindelse til DR"
+		dir.header = unicode( L('jsonConnectionErrorTitle'))
+		dir.message = unicode(L('jsonConnectionErrorMessage'))
 	else:
 		
 		# add live stream
 		dir.add(DirectoryObject(
-							title 		= 'Live TV', 
-							summary 	= 'Se live TV', 
+							title 		=unicode( L('liveTVTitle')), 
+							summary 	= unicode(L('liveTVSummary')), 
 							key 		= Callback(Bundle, 
-											title2		="Live TV", 
+											title2		= unicode(L('liveTVTitle')), 
 											url			= BUNDLE_URL,
 											live 		= True, 
 											BundleType	="'Channel'", 
@@ -91,26 +91,30 @@ def VideoMainMenu():
 		
 		# add program overview
 		dir.add(DirectoryObject(
-							title 		= 'Programmer', 
-							summary 	= 'Se programmer fra DR\'s arkiv', 
+							title 		= unicode(L('programsTitle')), 
+							summary 	= unicode(L('programsSummary')), 
 							key 		= Callback(ProgramMenu)))
 		
 		# add news overview
 		dir.add(DirectoryObject(
-							title 		= 'Nyheder', 
-							summary 	= 'Se nyheder fra DR\'s kanaler', 
+							title 		= unicode(L('newsTitle')), 
+							summary 	= unicode(L('newsSummary')), 
 							key 		= Callback(NewsMenu)))
 							
 		# add preview overview
 		dir.add(DirectoryObject(
-							title 		= 'Forpremiere', 
-							summary 	= 'Se forpremiere fra DR', 
+							title 		= unicode(L('preReleaseTitle')), 
+							summary 	= unicode(L('preReleaseSummary')), 
 							key 		= Callback(Bundle, 
-											title2 		= 'Forpremiere',
+											title2 		= unicode(L('preReleaseTitle')),
 											url			= 'http://www.dr.dk/mu/programcard/relations/member/urn:dr:mu:bundle:4f476dd4860d9a215449ff03',
 											live		= False,
 											ChannelType = "'TV'", 
 											limit		="$eq(0)")))
+		dir.add(PrefsObject(title = unicode(L('preferences')),
+						thumb = R(ICON),
+						art = R(ART)))
+		
 		
 		return dir
 	
@@ -119,18 +123,18 @@ def VideoMainMenu():
 def MusicMainMenu():
 	
 	# create OC
-	dir = ObjectContainer(view_group="List", title1 = NAME, title2 = "Radio")
+	dir = ObjectContainer(view_group="List", title1 = NAME, title2 = unicode(L('radioTitle')))
 	
 	# add radio overview
 	dir.add(DirectoryObject(
-						title 		= "Live Radio", 
-						summary 	= "Lyt til Live Radio", 
+						title 		= unicode(L('liveRadioTitle')), 
+						summary 	= unicode(L('liveRadioSummary')), 
 						key 		= Callback(LiveRadioMenu)))
 	
 	# add tv overview
 	dir.add(DirectoryObject(
-						title 		= "Se TV", 
-						summary 	= "Se TV", 
+						title 		= unicode(L('tvFromRadioTitle')), 
+						summary 	= unicode(L('tvFromRadioSummary')), 
 						key 		= Callback(VideoMainMenu)))
 	
 
@@ -141,7 +145,7 @@ def MusicMainMenu():
 @route('/music/drnu/live')
 def LiveRadioMenu():
 
-	dir = ObjectContainer(view_group = "List", title1 = NAME, title2 = L("Live Radio"), art = R(ART))
+	dir = ObjectContainer(view_group = "List", title1 = NAME, title2 = L("liveRadioTitle"), art = R(ART))
 	for myLoop in CONFIGURATION['Data']:
 		if myLoop.get('Id') == 'RADIOVisibleFrontPageChannels':
 			for Order in myLoop['Order']:
@@ -157,13 +161,13 @@ def LiveRadioMenu():
 @route('/video/drnu/lettermenu/{programs}', programs = dict)
 def LetterMenu(programs):
 	# create OC
-	dir = ObjectContainer(view_group = "List", title1 = NAME, title2 = "Live Radio")
+	dir = ObjectContainer(view_group = "List", title1 = NAME, title2 = unicode(L('programsTitle')))
 	
 	# try fetch url or raise exception
 	try:
 		conf = JSON.ObjectFromURL('http://www.dr.dk/mu/Configuration')
 	except:
-		raise Ex.MediaNotAvailable
+		Log.Debug(unicode(L('jsonConnectionErrorMessage')))
 	
 	# run through live radio
 	for myLoop in conf['Data']:
@@ -192,8 +196,8 @@ def LetterMenu(programs):
 				else:
 					
 					dir.add(DirectoryObject(
-										title 		= 'P4', 
-										summary		= 'Se alle lokale P4 kanaler.',
+										title 		= unicode(L('P4Title')), 
+										summary		= unicode(L('P4Summary')),
 										art			= R(ART),
 										thumb		= R(ICON),
 										key 		= Callback(LiveRadioP4Menu)))
@@ -207,7 +211,7 @@ def LetterMenu(programs):
 def LiveRadioP4Menu():
 	
 	# create OC
-	dir = ObjectContainer(view_group="List",title1 = NAME, title2 = "P4")
+	dir = ObjectContainer(view_group="List",title1 = NAME, title2 = unicode(L('P4Title')))
 	
 	# try fetch url or raise exception
 	try:
@@ -242,14 +246,14 @@ def LiveRadioP4Menu():
 def ProgramMenu():
 	
 	# create OC
-	dir = ObjectContainer(view_group = "List", title1 = NAME, title2 = "Programmer")
+	dir = ObjectContainer(view_group = "List", title1 = NAME, title2 = unicode(L('programsTitle')))
 		
 	# add program overview by firstChar
 	dir.add(DirectoryObject(
-						title 		= 'Programmer efter bogstav', 
-						summary 	= 'Se liste over programmer sorteret efter bogstav.', 
+						title 		= unicode(L('programsByFirstCharTitle')), 
+						summary 	= unicode(L('programsByFirstCharSummary')), 
 						key 		= Callback(bundles_with_public_asset, 
-											title 		= 'Programmer', 
+											title 		= unicode(L('programsTitle')), 
 											groupby 	= 'firstChar', 
 											DrChannel	= "true", 
 											ChannelType = "'TV'", 
@@ -270,23 +274,25 @@ def ProgramMenu():
 	#										Title 		= "$orderby('asc')")))
 	#===========================================================================
 	
+	#===========================================================================
+	# # add newest overview
+	# dir.add(DirectoryObject(
+	#					title 		= L('latestProgramsTitle'), 
+	#					summary 	= L('latestProgramsSummary'), 
+	#					key 		= Callback(Bundle, 
+	#										title2 		= L('latestProgramsTitle2'),
+	#										url			= 'http://www.dr.dk/mu/programcard/relations/member/urn:dr:mu:bundle:4f476465860d9a215449ff02',
+	#										live		= False,
+	#										ChannelType = "'TV'", 
+	#										limit		="$eq(0)")))
+	# 
+	#===========================================================================
 	# add newest overview
 	dir.add(DirectoryObject(
-						title 		= 'Nyeste programmer', 
-						summary 	= 'Se liste over de nyeste programmer fra DR', 
-						key 		= Callback(Bundle, 
-											title2 		= 'Nyeste programmer',
-											url			= 'http://www.dr.dk/mu/programcard/relations/member/urn:dr:mu:bundle:4f476465860d9a215449ff02',
-											live		= False,
-											ChannelType = "'TV'", 
-											limit		="$eq(0)")))
-	
-	# add newest overview
-	dir.add(DirectoryObject(
-						title 		= 'Mest sete programmer', 
-						summary 	= 'Se liste over de mest sete programmer fra DR', 
+						title 		= unicode(L('mostWatchedProgramsTitle')), 
+						summary 	= unicode(L('mostWatchedProgramsSummary')), 
 						key 		= Callback(ProgramViews, 
-											title 		= 'Mest sete programmer',
+											title 		= unicode(L('mostWatchedProgramsTitle')),
 											type		= 'MostViewed',
 											ChannelType = "'TV'", 
 											limit		="$eq(0)",
@@ -294,10 +300,10 @@ def ProgramMenu():
 	
 	# add newest overview
 	dir.add(DirectoryObject(
-						title 		= 'Senest sete programmer', 
-						summary 	= 'Se liste over de senest sete programmer fra DR', 
+						title 		= unicode(L('latestProgramsTitle')), 
+						summary 	= unicode(L('latestProgramsSummary')), 
 						key 		= Callback(ProgramViews, 
-											title 		= 'Senest sete programmer',
+											title 		= unicode(L('latestProgramsTitle')),
 											type		= 'RecentViews',
 											ChannelType = "'TV'", 
 											limit		="$eq(0)",
@@ -305,11 +311,11 @@ def ProgramMenu():
 	
 	# add program overview by name
 	dir.add(InputDirectoryObject(
-						title 		= 'Søg efter program ...'.decode('utf-8'), 
-						summary 	= 'Søg efter et program hos DR'.decode('utf-8'),
-						prompt		= 'Søgeord:'.decode('utf-8'),
+						title 		= unicode(L('searchTitle')), 
+						summary 	= unicode(L('searchSummary')),
+						prompt		= unicode(L('searchPrompt')),
 						key 		= Callback(bundles_with_public_asset, 
-											title 		= 'Programmer',
+											title 		= unicode(L('programsTitle')),
 											groupby 	= 'name', 
 											DrChannel	= "true", 
 											ChannelType = "'TV'", 
@@ -324,15 +330,15 @@ def ProgramMenu():
 def NewsMenu():
 	
 	# create OC
-	dir = ObjectContainer(view_group = "List", title1 = NAME, title2 = "Nyheder")
+	dir = ObjectContainer(view_group = "List", title1 = NAME, title2 = unicode(L('newsTitle')))
 		
 	# add DR Update overview
 	dir.add(DirectoryObject(
-						title 		= 'Nyheder fra DR Update', 
-						summary 	= 'Se nyheder fra DR Update', 
+						title 		= unicode(L('newsUpdateTitle')), 
+						summary 	= unicode(L('newsUpdateSummary')), 
 						thumb 		= R('dr-update-2_icon-default.png'), 
 						key 		= Callback(Bundle, 
-										title2 		= 'Nyheder fra DR Update',
+										title2 		= unicode(L('newsUpdateTitle')),
 										url			= 'http://www.dr.dk/mu/programcard/relations/member/urn:dr:mu:bundle:4f3b88e3860d9a33ccfdadcb?Assets.Kind="VideoResource"&Broadcasts.BroadcastDate=$orderby("desc")',
 										live		= False,
 										ChannelType = "'TV'", 
@@ -340,11 +346,11 @@ def NewsMenu():
 	
 	# add Deadline 17.00 overview
 	dir.add(DirectoryObject(
-						title 		= 'Deadline 17.00', 
-						summary 	= 'Se Deadline 17.00\'s programmer', 
+						title 		= unicode(L('newsDeadline1700Title')), 
+						summary 	= unicode(L('newsDeadline1700Summary')), 
 						thumb 		= R(ICON), 
 						key 		= Callback(Bundle, 
-										title2 		= 'Deadline 17.00',
+										title2 		= unicode(L('newsDeadline1700Title')),
 										url			= 'http://www.dr.dk/mu/programcard/relations/member/urn:dr:mu:bundle:4f3b88e7860d9a33ccfdae10?Assets.Kind="VideoResource"&Broadcasts.BroadcastDate=$orderby("desc")',
 										live		= False,
 										ChannelType = "'TV'", 
@@ -352,11 +358,11 @@ def NewsMenu():
 	
 	# add TV Avisen 18.30 overview
 	dir.add(DirectoryObject(
-						title 		= 'TV Avisen 18.30', 
-						summary 	= 'Se TV Avisen 18.30\'s programmer', 
+						title 		= unicode(L('newsTVAvisen1830Title')), 
+						summary 	= unicode(L('newsTVAvisen1830Summary')), 
 						thumb 		= R(ICON), 
 						key 		= Callback(Bundle, 
-										title2 		= 'TV Avisen 18.30',
+										title2 		= unicode(L('newsTVAvisen1830Title')),
 										url			= 'http://www.dr.dk/mu/programcard/relations/member/urn:dr:mu:bundle:4f3b88e4860d9a33ccfdade4?Assets.Kind="VideoResource"&Broadcasts.BroadcastDate=$orderby("desc")',
 										live		= False,
 										ChannelType = "'TV'", 
@@ -364,11 +370,11 @@ def NewsMenu():
 	
 	# add TV Avisen 21.00 overview
 	dir.add(DirectoryObject(
-						title 		= 'TV Avisen 21.00', 
-						summary 	= 'Se TV Avisen 21.00\'s programmer', 
+						title 		= unicode(L('newsTVAvisen2100Title')), 
+						summary 	= unicode(L('newsTVAvisen2100Summary')), 
 						thumb 		= R(ICON), 
 						key 		= Callback(Bundle, 
-										title2 		= 'Deadline 17.00',
+										title2 		= unicode(L('newsTVAvisen2100Title')),
 										url			= 'http://www.dr.dk/mu/programcard/relations/member/urn:dr:mu:bundle:4f3b88e4860d9a33ccfdadeb?Assets.Kind="VideoResource"&Broadcasts.BroadcastDate=$orderby("desc")',
 										live		= False,
 										ChannelType = "'TV'", 
@@ -376,11 +382,11 @@ def NewsMenu():
 	
 	# add Deadline 22.30 overview
 	dir.add(DirectoryObject(
-						title 		= 'Deadline 22.30', 
-						summary 	= 'Se Deadline 22.30\'s programmer', 
+						title 		= unicode(L('newsDeadline2230Title')), 
+						summary 	= unicode(L('newsDeadline2230Summary')), 
 						thumb 		= R(ICON), 
 						key 		= Callback(Bundle, 
-										title2 		= 'Deadline 22.30',
+										title2 		= unicode(L('newsDeadline2230Title')),
 										url			= 'http://www.dr.dk/mu/programcard/relations/member/urn:dr:mu:bundle:4f3b88e8860d9a33ccfdae20?Assets.Kind="VideoResource"&Broadcasts.BroadcastDate=$orderby("desc")',
 										live		= False,
 										ChannelType = "'TV'", 
@@ -464,7 +470,7 @@ def Bundle(title2 = NAME, title1 = NAME, url = BUNDLE_URL, live = False, **kwarg
 			try:
 				description = getTVLiveMetadata(program['Slug'] )
 			except:
-				Log.Debug('Fejl ved forsøg på at hente metadata for live kanal ' + program['Slug'])
+				Log.Debug(unicode(L('metadataLiveError')) + program['Slug'])
 			
 			# add VCO (Livefeed) to OC	
 			dir.add(VideoClipObject(
@@ -591,7 +597,7 @@ def bundles_with_public_asset(title = NAME, groupby = 'firstChar', query = '', *
 		for firstChar in sorted(bucket.iterkeys()):
 			dir.add(DirectoryObject(
 								title	= firstChar,
-								summary = "Programmer der begynder med " + firstChar,
+								summary = unicode(L('fistCharBucketTitle')) + firstChar,
 								key 	= Callback(LetterMenu, 
 												DrChannel	= "true", 
 												ChannelType = "'TV'", 
@@ -856,13 +862,13 @@ def getRadioMetadata(channelId):
 	try:
 		JSONobjTracks = JSON.ObjectFromURL(RADIO_TRACKS_URL % channelId, cacheTime=30)
 		if JSONobjTracks['tracks']:
-			pre1 = "\n\nSeneste Titel: "
+			pre1 = "\n\n%s: " % unicode(L('latestTitle'))
 			for track in JSONobjTracks['tracks']:
 				if track['displayArtist']:
 					trackop = trackop + pre1 + track['displayArtist']
 				if track['title']:
 					trackop = trackop + "\n" + track['title'] + "\n\n"
-				pre1 = "Forrige: "
+				pre1 = "%s: " % unicode(L('previous'))
 	except:pass			
 					
 	strNowNext = title_now + description_now + start_now + stop_now + title_next + description_next + start_next + stop_next + trackop
@@ -875,7 +881,7 @@ def getTVLiveMetadata(slug):
 	description = ""
 	# now
 	if 'Now' in nowNext:	
-		description += 'Nu:'
+		description += '%s:' % unicode(L('now'))
 		if 'Title' in nowNext['Now']:
 			description += ' ' + nowNext['Now']['Title']
 	#===========================================================================
@@ -891,11 +897,11 @@ def getTVLiveMetadata(slug):
 	#===========================================================================
 			description += '\n' + String.StripTags(nowNext['Now']['Description'])
 	else:
-		description += 'Ingen udsendelser'
+		description += unicode(L('noBroadcast'))
 	
 	# next
 	if 'Next' in nowNext:
-		description+= u'\n\nN\xe6ste:'
+		description+= u'\n\n%s:' % unicode( unicode(L('next')))
 		if 'Title' in nowNext['Next']:
 			description += ' ' + nowNext['Next']['Title']
 	#===========================================================================
