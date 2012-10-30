@@ -1,55 +1,52 @@
-import time
-import datetime
-import re
 import urllib
+import re
 #Ex.MediaNotAvailable
 #Ex.MediaNotAuthorized
 #Ex.MediaGeoblocked
-
+#import time
+#import datetime
 ###################################################################################################
+VIDEO_PREFIX = "/video/drnu"
+MUSIC_PREFIX = "/music/drnu"
+BETA_EXCLUDE = ['']
 
-VIDEO_PREFIX 		= "/video/drnu"
-MUSIC_PREFIX 		= "/music/drnu"
-BETA_EXCLUDE 		= ['']
-
-RADIO_NOWNEXT_URL 	= "http://www.dr.dk/tjenester/LiveNetRadio/datafeed/programInfo.drxml?channelId=%s"
-RADIO_TRACKS_URL 	= "http://www.dr.dk/tjenester/LiveNetRadio/datafeed/trackInfo.drxml?channelId=%s"
-NAME  				= "DR NU"
-ART   				= 'art-default.jpg'
-ICON  				= 'icon-default.png'
-jsDrRadioLive 		= "http://www.dr.dk/radio/channels/channels.json.drxml/"
-
-HTTP.CacheTime 		= 3600
-
+RADIO_NOWNEXT_URL = "http://www.dr.dk/tjenester/LiveNetRadio/datafeed/programInfo.drxml?channelId=%s"
+RADIO_TRACKS_URL = "http://www.dr.dk/tjenester/LiveNetRadio/datafeed/trackInfo.drxml?channelId=%s"
+NAME  = "DR NU"
+ART   = 'art-default.jpg'
+ICON  = 'icon-default.png'
+jsDrRadioLive = "http://www.dr.dk/radio/channels/channels.json.drxml/"
 CONFIGURATION 		= dict()
 BUNDLE_URL			= 'http://www.dr.dk/mu/Bundle'
 PROGRAMCARD_URL 	= 'http://www.dr.dk/mu/programcard'
 PROGRAMVIEW_URL 	= 'http://www.dr.dk/mu/ProgramViews/'
 BUNDLESWITHPUBLICASSET_URL = 'http://www.dr.dk/mu/View/bundles-with-public-asset'
 
-###################################################################################################
+
+####################################################################################################
 
 def ValidatePrefs():
 	Locale.DefaultLocale = Prefs['language']
 
+
 ###################################################################################################
-	
+
 def Start():
 
 	Plugin.AddPrefixHandler(VIDEO_PREFIX, VideoMainMenu, NAME, ICON, ART)
-	Plugin.AddPrefixHandler(MUSIC_PREFIX, MusicMainMenu, NAME, ICON, ART)
+#	Plugin.AddPrefixHandler(MUSIC_PREFIX, MusicMainMenu, NAME, ICON, ART)
 	Plugin.AddViewGroup("InfoList", viewMode="InfoList", mediaType="items")
 	Plugin.AddViewGroup("List", viewMode="List", mediaType="items")
 	MediaContainer.art 		= R(ART)
 	MediaContainer.title1 	= NAME
 	DirectoryObject.thumb 	= R(ICON)
 	DirectoryObject.art		= R(ART)
-	ObjectContainer.thumb 	= R(ICON)
 	ObjectContainer.art 	= R(ART)
 	VideoClipObject.thumb	= R(ICON)
 	VideoClipObject.art		= R(ART)
 	InputDirectoryObject.thumb = R(ICON)
 	InputDirectoryObject.art = R(ART)
+
 	HTTP.Headers['User-Agent'] = "Mozilla/5.0 (Macintosh; U; Intel Mac OS X 10.7; en-US; rv:1.9.2.13) Gecko/20101203 Firefox/3.6.13"
 #	Locale.DefaultLocale = Prefs['language']
 
@@ -57,9 +54,7 @@ def Start():
 
 @route('/video/drnu')
 def VideoMainMenu():
-	
-	# set globals
-	global CONFIGURATION
+
 	
 	# create OC
 	dir = ObjectContainer(view_group = "List", title1 = NAME, title2 = "TV")
@@ -86,11 +81,13 @@ def VideoMainMenu():
 											limit		='$eq(0)', 
 											SourceUrl	="$orderby('asc')")))
 		
-		# add live radio
-		dir.add(DirectoryObject(
-							title 		= 'Live Radio', 
-							summary 	= 'Lyt til live Radio', 
-							key 		= Callback(LiveRadioMenu)))
+		#=======================================================================
+		# # add live radio
+		# dir.add(DirectoryObject(
+		#					title 		= 'Live Radio', 
+		#					summary 	= 'Lyt til live Radio', 
+		#					key 		= Callback(LiveRadioMenu)))
+		#=======================================================================
 		
 		# add program overview
 		dir.add(DirectoryObject(
@@ -116,8 +113,7 @@ def VideoMainMenu():
 											limit		="$eq(0)")))
 		
 		return dir
-
-###################################################################################################
+	
 
 @route('/music/drnu')
 def MusicMainMenu():
@@ -137,15 +133,29 @@ def MusicMainMenu():
 						summary 	= "Se TV", 
 						key 		= Callback(VideoMainMenu)))
 	
-#	dir.add(PrefsObject(title = "Indstillinger...", summary="Indstil DR NU plug-in", thumb = R(ICON), art = R(ART)))
-	
+
 	return dir
 
 ###################################################################################################
 
 @route('/music/drnu/live')
 def LiveRadioMenu():
-	
+
+	dir = ObjectContainer(view_group = "List", title1 = NAME, title2 = L("Live Radio"), art = R(ART))
+	for myLoop in CONFIGURATION['Data']:
+		if myLoop.get('Id') == 'RADIOVisibleFrontPageChannels':
+			for Order in myLoop['Order']:
+				if '{' not in Order:
+					drMeta = JSON.ObjectFromURL("http://www.dr.dk/mu/Bundle?BundleType='Channel'&ChannelType='RADIO'&DrChannel=true&limit=$eq(1)&SourceUrl=$eq('dr.dk/mas/whatson/channel/%s')" % Order.rsplit('/',1)[1])
+					dir.add(VideoClipObject(title = drMeta['Data'][0]['Title'], url = 'http://www.dr.dk/radio/player/?%s' % 'P3'))
+				else:
+					dir.add(DirectoryObject(title = 'P4', key = Callback(LiveRadioP4Menu)))
+	return dir
+
+
+
+@route('/video/drnu/lettermenu/{programs}', programs = dict)
+def LetterMenu(programs):
 	# create OC
 	dir = ObjectContainer(view_group = "List", title1 = NAME, title2 = "Live Radio")
 	
@@ -188,6 +198,7 @@ def LiveRadioMenu():
 										thumb		= R(ICON),
 										key 		= Callback(LiveRadioP4Menu)))
 	
+
 	return dir
 
 ###################################################################################################
@@ -245,17 +256,19 @@ def ProgramMenu():
 											limit		="$eq(0)", 
 											Title 		= "$orderby('asc')")))
 	
-	# add program overview by name
-	dir.add(DirectoryObject(
-						title 		= 'Programmer efter navn', 
-						summary 	= 'Se liste over programmer sorteret efter program navn.', 
-						key 		= Callback(bundles_with_public_asset, 
-											title 		= 'Programmer', 
-											groupby 	= 'name', 
-											DrChannel	= "true", 
-											ChannelType = "'TV'", 
-											limit		="$eq(0)", 
-											Title 		= "$orderby('asc')")))
+	#===========================================================================
+	# # add program overview by name
+	# dir.add(DirectoryObject(
+	#					title 		= 'Programmer efter navn', 
+	#					summary 	= 'Se liste over programmer sorteret efter program navn.', 
+	#					key 		= Callback(bundles_with_public_asset, 
+	#										title 		= 'Programmer', 
+	#										groupby 	= 'name', 
+	#										DrChannel	= "true", 
+	#										ChannelType = "'TV'", 
+	#										limit		="$eq(0)", 
+	#										Title 		= "$orderby('asc')")))
+	#===========================================================================
 	
 	# add newest overview
 	dir.add(DirectoryObject(
@@ -841,7 +854,7 @@ def getRadioMetadata(channelId):
 			stop_next = "-" + JSONobj['nextProgram']['stop'].split('T')[1].split(':')[0]+":"+JSONobj['nextProgram']['stop'].split('T')[1].split(':')[1]
 
 	try:
-		JSONobjTracks = JSON.ObjectFromURL(RADIO_TRACKS_URL % channelId, cacheTime=30, errors='Ingore')
+		JSONobjTracks = JSON.ObjectFromURL(RADIO_TRACKS_URL % channelId, cacheTime=30)
 		if JSONobjTracks['tracks']:
 			pre1 = "\n\nSeneste Titel: "
 			for track in JSONobjTracks['tracks']:
@@ -856,7 +869,6 @@ def getRadioMetadata(channelId):
 		
 	return strNowNext
 
-###################################################################################################
 
 def getTVLiveMetadata(slug):
 	nowNext = JSON.ObjectFromURL('http://www.dr.dk/TV/live/info/%s/json' % slug)
@@ -900,3 +912,4 @@ def getTVLiveMetadata(slug):
 			description += '\n' + String.StripTags(nowNext['Next']['Description'])
 	
 	return description
+#######################################################
