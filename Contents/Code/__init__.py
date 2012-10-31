@@ -1,10 +1,4 @@
-import urllib
 import re
-#Ex.MediaNotAvailable
-#Ex.MediaNotAuthorized
-#Ex.MediaGeoblocked
-#import time
-#import datetime
 ###################################################################################################
 VIDEO_PREFIX = "/video/drnu"
 MUSIC_PREFIX = "/music/drnu"
@@ -22,23 +16,12 @@ PROGRAMCARD_URL 	= 'http://www.dr.dk/mu/programcard'
 PROGRAMVIEW_URL 	= 'http://www.dr.dk/mu/ProgramViews/'
 BUNDLESWITHPUBLICASSET_URL = 'http://www.dr.dk/mu/View/bundles-with-public-asset'
 
-
-####################################################################################################
-
-def ValidatePrefs():
-	Locale.DefaultLocale = Prefs['language']
-
-
 ###################################################################################################
 
 def Start():
 
-	Plugin.AddPrefixHandler(VIDEO_PREFIX, VideoMainMenu, NAME, ICON, ART)
-#	Plugin.AddPrefixHandler(MUSIC_PREFIX, MusicMainMenu, NAME, ICON, ART)
 	Plugin.AddViewGroup("InfoList", viewMode="InfoList", mediaType="items")
 	Plugin.AddViewGroup("List", viewMode="List", mediaType="items")
-	MediaContainer.art 		= R(ART)
-	MediaContainer.title1 	= NAME
 	DirectoryObject.thumb 	= R(ICON)
 	DirectoryObject.art		= R(ART)
 	ObjectContainer.art 	= R(ART)
@@ -48,11 +31,10 @@ def Start():
 	InputDirectoryObject.art = R(ART)
 
 	HTTP.Headers['User-Agent'] = "Mozilla/5.0 (Macintosh; U; Intel Mac OS X 10.7; en-US; rv:1.9.2.13) Gecko/20101203 Firefox/3.6.13"
-#	Locale.DefaultLocale = Prefs['language']
 
 ###################################################################################################
 
-@route('/video/drnu')
+@handler('/video/drnu', NAME, thumb=ICON, art=ART)
 def VideoMainMenu():
 
 	
@@ -75,11 +57,11 @@ def VideoMainMenu():
 											title2		= unicode(L('liveTVTitle')), 
 											url			= BUNDLE_URL,
 											live 		= True, 
-											BundleType	="'Channel'", 
-											ChannelType	="'TV'", 
+											BundleType	= "'Channel'", 
+											ChannelType	= "'TV'", 
 											DrChannel 	= 'true', 
-											limit		='$eq(0)', 
-											SourceUrl	="$orderby('asc')")))
+											limit		= '$eq(0)', 
+											SourceUrl	= "$orderby('asc')")))
 		
 		#=======================================================================
 		# # add live radio
@@ -110,7 +92,7 @@ def VideoMainMenu():
 											url			= 'http://www.dr.dk/mu/programcard/relations/member/urn:dr:mu:bundle:4f476dd4860d9a215449ff03',
 											live		= False,
 											ChannelType = "'TV'", 
-											limit		="$eq(0)")))
+											limit		= "$eq(0)")))
 		dir.add(PrefsObject(title = unicode(L('preferences')),
 						thumb = R(ICON),
 						art = R(ART)))
@@ -119,7 +101,7 @@ def VideoMainMenu():
 		return dir
 	
 
-@route('/music/drnu')
+@handler('/music/drnu', NAME, thumb=ICON, art=ART)
 def MusicMainMenu():
 	
 	# create OC
@@ -257,7 +239,7 @@ def ProgramMenu():
 											groupby 	= 'firstChar', 
 											DrChannel	= "true", 
 											ChannelType = "'TV'", 
-											limit		="$eq(0)", 
+											limit		= "$eq(0)", 
 											Title 		= "$orderby('asc')")))
 	
 	#===========================================================================
@@ -295,8 +277,8 @@ def ProgramMenu():
 											title 		= unicode(L('mostWatchedProgramsTitle')),
 											type		= 'MostViewed',
 											ChannelType = "'TV'", 
-											limit		="$eq(0)",
-											TotalViews	="$orderby('asc')")))
+											limit		= "$eq(0)",
+											TotalViews	= "$orderby('asc')")))
 	
 	# add newest overview
 	dir.add(DirectoryObject(
@@ -306,8 +288,8 @@ def ProgramMenu():
 											title 		= unicode(L('latestProgramsTitle')),
 											type		= 'RecentViews',
 											ChannelType = "'TV'", 
-											limit		="$eq(0)",
-											TotalViews	="$orderby('asc')")))
+											limit		= "$eq(0)",
+											TotalViews	= "$orderby('asc')")))
 	
 	# add program overview by name
 	dir.add(InputDirectoryObject(
@@ -319,7 +301,7 @@ def ProgramMenu():
 											groupby 	= 'name', 
 											DrChannel	= "true", 
 											ChannelType = "'TV'", 
-											limit		="$eq(0)", 
+											limit		= "$eq(0)", 
 											Title 		= "$orderby('asc')")))
 	
 	return dir
@@ -342,7 +324,7 @@ def NewsMenu():
 										url			= 'http://www.dr.dk/mu/programcard/relations/member/urn:dr:mu:bundle:4f3b88e3860d9a33ccfdadcb?Assets.Kind="VideoResource"&Broadcasts.BroadcastDate=$orderby("desc")',
 										live		= False,
 										ChannelType = "'TV'", 
-										limit		="$eq(20)")))
+										limit		= "$eq(20)")))
 	
 	# add Deadline 17.00 overview
 	dir.add(DirectoryObject(
@@ -354,7 +336,7 @@ def NewsMenu():
 										url			= 'http://www.dr.dk/mu/programcard/relations/member/urn:dr:mu:bundle:4f3b88e7860d9a33ccfdae10?Assets.Kind="VideoResource"&Broadcasts.BroadcastDate=$orderby("desc")',
 										live		= False,
 										ChannelType = "'TV'", 
-										limit		="$eq(20)")))
+										limit		= "$eq(20)")))
 	
 	# add TV Avisen 18.30 overview
 	dir.add(DirectoryObject(
@@ -366,7 +348,7 @@ def NewsMenu():
 										url			= 'http://www.dr.dk/mu/programcard/relations/member/urn:dr:mu:bundle:4f3b88e4860d9a33ccfdade4?Assets.Kind="VideoResource"&Broadcasts.BroadcastDate=$orderby("desc")',
 										live		= False,
 										ChannelType = "'TV'", 
-										limit		="$eq(20)")))
+										limit		= "$eq(20)")))
 	
 	# add TV Avisen 21.00 overview
 	dir.add(DirectoryObject(
@@ -378,7 +360,7 @@ def NewsMenu():
 										url			= 'http://www.dr.dk/mu/programcard/relations/member/urn:dr:mu:bundle:4f3b88e4860d9a33ccfdadeb?Assets.Kind="VideoResource"&Broadcasts.BroadcastDate=$orderby("desc")',
 										live		= False,
 										ChannelType = "'TV'", 
-										limit		="$eq(20)")))
+										limit		= "$eq(20)")))
 	
 	# add Deadline 22.30 overview
 	dir.add(DirectoryObject(
@@ -390,7 +372,7 @@ def NewsMenu():
 										url			= 'http://www.dr.dk/mu/programcard/relations/member/urn:dr:mu:bundle:4f3b88e8860d9a33ccfdae20?Assets.Kind="VideoResource"&Broadcasts.BroadcastDate=$orderby("desc")',
 										live		= False,
 										ChannelType = "'TV'", 
-										limit		="$eq(20)")))
+										limit		= "$eq(20)")))
 	
 	return dir
 
@@ -530,7 +512,7 @@ def ProgramViews(title = NAME, type = '/', **kwargs):
 	
 	# get programcards
 	try:
-		programcards= JSON.ObjectFromURL(argsToURLString(APIURL = PROGRAMVIEW_URL + type, args = kwargs))
+		programcards = JSON.ObjectFromURL(argsToURLString(APIURL = PROGRAMVIEW_URL + type, args = kwargs))
 	except:
 		raise Ex.MediaNotAvailable
 	
@@ -552,13 +534,13 @@ def ProgramViews(title = NAME, type = '/', **kwargs):
 def bundles_with_public_asset(title = NAME, groupby = 'firstChar', query = '', **kwargs):
 	
 	# create OC
-	dir 		= ObjectContainer(view_group="List", title1 = NAME, title2 = title)
+	dir = ObjectContainer(view_group="List", title1 = NAME, title2 = title)
 	
 	#create url
 	url = argsToURLString(APIURL = BUNDLESWITHPUBLICASSET_URL, args = kwargs)
 	
 	# add search query if any
-	if query: url += "&Title=$like('" + urllib.quote_plus(query) + "')"
+	if query: url += "&Title=$like('" + String.Quote(query, usePlus=True) + "')"
 	
 	# set variables
 	programcards= JSON.ObjectFromURL(url)
@@ -601,7 +583,7 @@ def bundles_with_public_asset(title = NAME, groupby = 'firstChar', query = '', *
 								key 	= Callback(LetterMenu, 
 												DrChannel	= "true", 
 												ChannelType = "'TV'", 
-												limit		="$eq(0)", 
+												limit		= "$eq(0)", 
 												Title 		= "$like('" + firstChar + "')")))
 	
 	# group by name
@@ -818,12 +800,6 @@ def stripProgramCards(programcards):
 		pass
 
 	return programcards
-
-###################################################################################################
-
-def stripBundle(bundle):
-	
-	return bundle
 
 ###################################################################################################
 
