@@ -17,7 +17,7 @@
 	"tvFromRadioTitle"				:	"Watch TV",
 	"tvFromRadioSummary"			:	"Watch TV",
 	"P4Title"						:	"P4",
-	"P4Summary"						"	"View all regional P4 Channels.",
+	"P4Summary"						:	"View all regional P4 Channels.",
 	"programsByFirstCharTitle"		:	"Programs by first letter",
 	"programsByFirstCharSummary"	:	"View a list of programs sorted by the first letter in the title.",
 	"mostWatchedProgramsTitle"		:	"Popular programs",
@@ -48,4 +48,3 @@
 	"preferences"					:	"Preferences",
 	"prefsGroupbyLabel" 			:	"Group Programs by"
 }
-	
