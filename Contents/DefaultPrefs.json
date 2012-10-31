@@ -1,9 +1,0 @@
-[
-  {
-    "id":"groupby",
-    "type":"enum",
-    "label":"Sort programs by",
-    "default": "First Letter",
-    "values": ["First Letter", "Letter Groups", "Name" ]
-  }
-]

@@ -93,13 +93,9 @@ def VideoMainMenu():
 											live		= False,
 											ChannelType = "'TV'", 
 											limit		= "$eq(0)")))
-		dir.add(PrefsObject(title = unicode(L('preferences')),
-						thumb = R(ICON),
-						art = R(ART)))
-		
-		
+
 		return dir
-	
+
 
 @handler('/music/drnu', NAME, thumb=ICON, art=ART)
 def MusicMainMenu():
