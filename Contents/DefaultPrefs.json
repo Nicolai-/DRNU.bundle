@@ -1,15 +1,9 @@
 [
   {
-    "id":"group_per_letter",
-    "type":"bool",
-    "label":"Group Programs per first letter",
-    "default": "false"
-  },
-  {
-    "id":"quality",
+    "id":"groupby",
     "type":"enum",
-    "label":"Quality",
-    "default": "high",
-    "values": [ "high", "medium", "low", "auto" ]
+    "label":"Sort programs by",
+    "default": "First Letter",
+    "values": ["First Letter", "Letter Groups", "Name" ]
   }
 ]
