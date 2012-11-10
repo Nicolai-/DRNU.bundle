@@ -314,14 +314,14 @@ def NewsMenu():
 	dir.add(DirectoryObject(
 						title 		= unicode(L('newsUpdateTitle')), 
 						summary 	= unicode(L('newsUpdateSummary')), 
-						thumb 		= R('dr-update-2_icon-default.png'), 
-						key 		= Callback(Bundle, 
+						thumb 		= R('icon-dr-update-2.png'),
+						key 		= Callback(Bundle,
 										title2 		= unicode(L('newsUpdateTitle')),
 										url			= 'http://www.dr.dk/mu/programcard/relations/member/urn:dr:mu:bundle:4f3b88e3860d9a33ccfdadcb?Assets.Kind="VideoResource"&Broadcasts.BroadcastDate=$orderby("desc")',
 										live		= False,
-										ChannelType = "'TV'", 
+										ChannelType = "'TV'",
 										limit		= "$eq(20)")))
-	
+
 	# add Deadline 17.00 overview
 	dir.add(DirectoryObject(
 						title 		= unicode(L('newsDeadline1700Title')), 
@@ -441,26 +441,26 @@ def Bundle(title2 = NAME, title1 = NAME, url = BUNDLE_URL, live = False, **kwarg
 	if live:
 		
 		# run through all channels
-		for program in programcards['Data']:	
-			
+		for program in programcards['Data']:
+
 			description = ""
-			
+
 			try:
 				description = getTVLiveMetadata(program['Slug'] )
 			except:
 				Log.Debug(unicode(L('metadataLiveError')) + program['Slug'])
-			
-			# add VCO (Livefeed) to OC	
+
+			# add VCO (Livefeed) to OC
 			dir.add(VideoClipObject(
 								title		= program['Title'],
-								art			= R(ART), 
-								thumb 		= R(program['Slug'] + '_icon-default.png'),
+								art			= R(ART),
+								thumb 		= R('icon-%s.png' % program['Slug']),
 								summary 	= description,
 								url 		= "http://www.dr.dk/TV/live/%s" % program['Slug']))
-	
+
 	# On demand TV		
 	else:
-		
+
 		# strip programcards
 		programcards = stripProgramCards(programcards)
 		
